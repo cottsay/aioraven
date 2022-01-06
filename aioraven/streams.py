@@ -1,9 +1,11 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 from asyncio.events import get_event_loop
 import xml.etree.ElementTree as ET
 
+from aioraven.device import RAVEnBaseDevice
 from aioraven.protocols import RAVEnReaderProtocol
 
 
@@ -13,7 +15,7 @@ async def open_connection(host=None, port=None, *, loop=None, **kwargs):
     reader = RAVEnReader(loop=loop)
     protocol = RAVEnReaderProtocol(reader, loop=loop)
     transport, _ = await loop.create_connection(
-        lambda: protocol, host, port, **kwargs)
+        lambda: protocol, host=host, port=port, **kwargs)
     writer = RAVEnWriter(transport)
     return reader, writer
 
@@ -68,8 +70,8 @@ class RAVEnReader:
     async def read_tag(self, tag):
         if self._eof:
             return None
-        if self._exception is not None:
-            raise self._exception
+        # if self._exception is not None:
+        #     raise self._exception
         self._waiters.setdefault(tag, [])
         waiter = self._loop.create_future()
         self._waiters[tag].append(waiter)
@@ -94,7 +96,30 @@ class RAVEnWriter:
             element_arg = ET.SubElement(element_cmd, k)
             element_arg.text = v
         tree = ET.ElementTree(element_cmd)
-        tree.write(self._transport)
+        tree.write(self._transport, encoding='ASCII', xml_declaration=False)
 
     def close(self):
         return self._transport.close()
+
+
+class RAVEnNetworkDevice(RAVEnBaseDevice):
+
+    async def open(self, host=None, port=None, *, loop=None, **kwargs):
+        self._reader, self._writer = await open_connection(
+            host=host, port=port, loop=loop, **kwargs)
+
+    async def close(self):
+        if self._writer:
+            self._writer.close()
+            self._reader = None
+            self._writer = None
+
+    async def _query(self, cmd_name, res_name=None, args=None):
+        if not self._reader or not self._writer:
+            raise RuntimeError('TODO: Not connected')
+        waiter = None
+        if res_name:
+            waiter = asyncio.create_task(self._reader.read_tag(res_name))
+            await asyncio.sleep(0)
+        self._writer.write_cmd(cmd_name, args)
+        return await waiter if waiter else None
