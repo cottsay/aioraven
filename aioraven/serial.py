@@ -14,7 +14,7 @@ async def open_serial_connection(*args, loop=None, **kwargs):
     if loop is None:
         loop = get_event_loop()
     reader = RAVEnReader(loop=loop)
-    protocol = RAVEnReaderProtocol(reader, loop=loop)
+    protocol = RAVEnReaderProtocol(reader)
     kwargs.setdefault('baudrate', 115200)
     transport, _ = await create_serial_connection(
         loop, lambda: protocol, *args, **kwargs)
