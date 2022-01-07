@@ -32,10 +32,9 @@ async def test_get_device_info():
     }
 
     async with mock_device(responses) as (host, port):
-        dut = RAVEnNetworkDevice()
-        await dut.open(host, port)
-        actual = await dut.get_device_info()
-        await dut.close()
+        async with RAVEnNetworkDevice() as dut:
+            await dut.open(host, port)
+            actual = await dut.get_device_info()
 
     assert actual == DeviceInfo(
         device_mac_id=b'0123456789ABCDEF',
@@ -67,10 +66,9 @@ async def test_get_current_price():
     }
 
     async with mock_device(responses) as (host, port):
-        dut = RAVEnNetworkDevice()
-        await dut.open(host, port)
-        actual = await dut.get_current_price()
-        await dut.close()
+        async with RAVEnNetworkDevice() as dut:
+            await dut.open(host, port)
+            actual = await dut.get_current_price()
 
     assert actual == PriceCluster(
         device_mac_id=b'0123456789ABCDEF',

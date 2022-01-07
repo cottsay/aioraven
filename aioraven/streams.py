@@ -3,6 +3,7 @@
 
 import asyncio
 from asyncio.events import get_event_loop
+from contextlib import AbstractAsyncContextManager
 import xml.etree.ElementTree as ET
 
 from aioraven.device import RAVEnBaseDevice
@@ -13,7 +14,7 @@ async def open_connection(host=None, port=None, *, loop=None, **kwargs):
     if loop is None:
         loop = get_event_loop()
     reader = RAVEnReader(loop=loop)
-    protocol = RAVEnReaderProtocol(reader, loop=loop)
+    protocol = RAVEnReaderProtocol(reader)
     transport, _ = await loop.create_connection(
         lambda: protocol, host=host, port=port, **kwargs)
     writer = RAVEnWriter(transport)
@@ -102,11 +103,10 @@ class RAVEnWriter:
         return self._transport.close()
 
 
-class RAVEnNetworkDevice(RAVEnBaseDevice):
+class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
 
-    async def open(self, host=None, port=None, *, loop=None, **kwargs):
-        self._reader, self._writer = await open_connection(
-            host=host, port=port, loop=loop, **kwargs)
+    _reader = None
+    _writer = None
 
     async def close(self):
         if self._writer:
@@ -123,3 +123,13 @@ class RAVEnNetworkDevice(RAVEnBaseDevice):
             await asyncio.sleep(0)
         self._writer.write_cmd(cmd_name, args)
         return await waiter if waiter else None
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
+
+
+class RAVEnNetworkDevice(RAVEnStreamDevice):
+
+    async def open(self, host=None, port=None, *, loop=None, **kwargs):
+        self._reader, self._writer = await open_connection(
+            host=host, port=port, loop=loop, **kwargs)

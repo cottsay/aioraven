@@ -9,7 +9,7 @@ from xml.etree.ElementTree import XMLPullParser
 class RAVEnReaderProtocol(Protocol):
     """Deserialize data fragments from a RAVEn device."""
 
-    def __init__(self, raven_reader, loop=None):
+    def __init__(self, raven_reader):
         self._raven_reader = raven_reader
         self._parser = None
 
