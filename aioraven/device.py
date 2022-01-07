@@ -1,6 +1,15 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+from aioraven.data import convert_currency
+from aioraven.data import convert_date_code
+from aioraven.data import convert_datetime
+from aioraven.data import convert_float
+from aioraven.data import convert_hex_to_bytes
+from aioraven.data import convert_int
+from aioraven.data import DeviceInfo
+from aioraven.data import PriceCluster
+
 
 class RAVEnBaseDevice:
 
@@ -49,10 +58,29 @@ class RAVEnBaseDevice:
             args['MeterMacId'] = str(meter)
         if refresh is not None:
             args['Refresh'] = str(refresh)
-        return await self._query('get_current_price', 'PriceCluster', args)
+        raw = await self._query('get_current_price', 'PriceCluster', args)
+        return PriceCluster(
+            device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
+            meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
+            time_stamp=convert_datetime(raw.get('TimeStamp'), True),
+            price=convert_float(raw.get('Price'), raw.get('TrailingDigits')),
+            currency=convert_currency(raw.get('Currency')),
+            tier=convert_int(raw.get('Tier')),
+            tier_label=raw.get('TierLabel'),
+            rate_label=raw.get('RateLabel'))
 
     async def get_device_info(self):
-        return await self._query('get_device_info', 'DeviceInfo')
+        raw = await self._query('get_device_info', 'DeviceInfo')
+        return DeviceInfo(
+            device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
+            install_code=convert_hex_to_bytes(raw.get('InstallCode')),
+            link_key=convert_hex_to_bytes(raw.get('LinkKey')),
+            fw_version=raw.get('FWVersion'),
+            hw_version=raw.get('HWVersion'),
+            image_type=raw.get('ImageType'),
+            manufacturer=raw.get('Manufacturer'),
+            model_id=raw.get('ModelId'),
+            date_code=convert_date_code(raw.get('DateCode')))
 
     async def get_instantaneous_demand(self, *, meter=None, refresh=None):
         args = {}

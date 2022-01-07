@@ -2,11 +2,74 @@
 # Licensed under the Apache License, Version 2.0
 
 from dataclasses import dataclass
-from datetime import date, datetime
-from enum import Enum, IntEnum
-from typing import List, Tuple
+from datetime import date
+from datetime import datetime
+from datetime import timezone
+from enum import Enum
+from enum import IntEnum
+from typing import List
+from typing import Tuple
 
 from iso4217 import Currency
+
+
+def convert_currency(raw):
+    if raw is None:
+        return raw
+    currency = next(filter(lambda c: c.number == int(raw, 0), Currency), None)
+    if currency is None:
+        raise ValueError(f"Invalid currency number: '{raw}'")
+    return currency
+
+
+def convert_date(raw):
+    if raw is None:
+        return raw
+    if len(raw) < 8:
+        raise ValueError(f"Invalid date format: '{raw}'")
+    return date(int(raw[:4]), int(raw[5:6]), int(raw[7:8]))
+
+
+def convert_date_code(raw):
+    if raw is None:
+        return raw
+    if len(raw) < 9:
+        raise ValueError(f"Invalid date code format: '{raw}'")
+    return (
+        convert_date(raw[:8]),
+        int(raw[9:]),
+    )
+
+
+def convert_datetime(raw, utc=False):
+    if raw is None:
+        return raw
+    return datetime.fromtimestamp(
+        946645200 + int(raw, 0),
+        tz=timezone.utc if utc else None)
+
+
+def convert_float(raw_value, raw_div):
+    if raw_value is None:
+        return raw_value
+    value = float(int(raw_value, 0))
+    if raw_div is None:
+        return value
+    return value / 10 ** int(raw_div, 0)
+
+
+def convert_hex_to_bytes(raw):
+    if raw is None:
+        return raw
+    if raw.startswith('0x'):
+        raw = raw[2:]
+    return raw.upper().encode()
+
+
+def convert_int(raw):
+    if raw is None:
+        return raw
+    return int(raw, 0)
 
 
 class ConnectionState(str, Enum):

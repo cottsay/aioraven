@@ -7,6 +7,16 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def mock_device(responses):
+    """
+    Create a mock device at a TCP endpoint.
+
+    This function creates a context-managed TCP endpoint which echoes verbatim
+    responses given verbatim requests.
+
+    :param dict responses: A mapping of request strings to responses.
+
+    :returns: A tuple including the host and port of the TCP endpoint.
+    """
     async def client_connected(reader, writer):
         buffer = b''
         while True:
