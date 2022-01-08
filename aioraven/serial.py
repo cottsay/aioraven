@@ -24,6 +24,19 @@ async def open_serial_connection(*args, loop=None, **kwargs):
 
 class RAVEnSerialDevice(RAVEnStreamDevice):
 
-    async def open(self, *args, loop=None, **kwargs):
+    def __init__(self, url, *args, loop=None, **kwargs):
+        self._url = url
+        self._args = args
+        self._loop = loop
+        self._kwargs = kwargs
+
+    def __repr__(self):
+        info = [self.__class__.__name__]
+        info.append('url=%s' % self._url)
+        return '<%s>' % ' '.join(info)
+
+    async def open(self):
+        if self._reader or self._writer:
+            return
         self._reader, self._writer = await open_serial_connection(
-            *args, loop=loop, **kwargs)
+            url=self._url, *self._args, loop=self._loop, **self._kwargs)

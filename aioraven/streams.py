@@ -30,7 +30,7 @@ class RAVEnReader:
         else:
             self._loop = loop
         self._eof = False
-        self._waiters = {}
+        self._waiters = {None: []}
         self._exception = None
 
     def __repr__(self):
@@ -48,13 +48,12 @@ class RAVEnReader:
         return self._exception
 
     def set_exception(self, exc):
-        self._exception = exc
+        # Only ParseError is recoverable
+        if not isinstance(exc, ET.ParseError):
+            self._exception = exc
         for waiters in self._waiters.values():
             while waiters:
                 waiters.pop(0).set_exception(exc)
-
-    def set_transport(self, transport):
-        self._transport = transport
 
     def feed_eof(self):
         self._eof = True
@@ -65,14 +64,27 @@ class RAVEnReader:
     def feed_element(self, data):
         self._waiters.setdefault(data.tag, [])
         waiters = self._waiters.get(data.tag, [])
+        res = {}
+        for e in data:
+            if e.tag in res:
+                if not isinstance(res[e.tag], list):
+                    res[e.tag] = [res[e.tag]]
+                res[e.tag].append(e.text)
+            else:
+                res[e.tag] = e.text
         if waiters:
-            waiters.pop(0).set_result({e.tag: e.text for e in data})
+            waiters.pop(0).set_result(res)
+            return
+        else:
+            waiters = self._waiters[None]
+            if waiters:
+                waiters.pop(0).set_result(res)
 
-    async def read_tag(self, tag):
+    async def read_tag(self, tag=None):
         if self._eof:
             return None
-        # if self._exception is not None:
-        #     raise self._exception
+        if self._exception is not None:
+            raise self._exception
         self._waiters.setdefault(tag, [])
         waiter = self._loop.create_future()
         self._waiters[tag].append(waiter)
@@ -86,7 +98,8 @@ class RAVEnWriter:
         self._transport = transport
 
     def __repr__(self):
-        info = [self.__class__.__name__, 'transport=%r' % self._transport]
+        info = [self.__class__.__name__]
+        info.append('transport=%r' % self._transport)
         return '<%s>' % ' '.join(info)
 
     def write_cmd(self, cmd_name, args=None):
@@ -108,6 +121,9 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
     _reader = None
     _writer = None
 
+    async def open(self):
+        raise NotImplementedError()
+
     async def close(self):
         if self._writer:
             self._writer.close()
@@ -116,7 +132,7 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
 
     async def _query(self, cmd_name, res_name=None, args=None):
         if not self._reader or not self._writer:
-            raise RuntimeError('TODO: Not connected')
+            raise RuntimeError('Device is not open')
         waiter = None
         if res_name:
             waiter = asyncio.create_task(self._reader.read_tag(res_name))
@@ -124,12 +140,30 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
         self._writer.write_cmd(cmd_name, args)
         return await waiter if waiter else None
 
+    async def __aenter__(self):
+        await self.open()
+        return self
+
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.close()
 
 
 class RAVEnNetworkDevice(RAVEnStreamDevice):
 
-    async def open(self, host=None, port=None, *, loop=None, **kwargs):
+    def __init__(self, host=None, port=None, *, loop=None, **kwargs):
+        self._host = host
+        self._port = port
+        self._loop = loop
+        self._kwargs = kwargs
+
+    def __repr__(self):
+        info = [self.__class__.__name__]
+        info.append('host=%s' % self._host)
+        info.append('port=%s' % self._port)
+        return '<%s>' % ' '.join(info)
+
+    async def open(self):
+        if self._reader or self._writer:
+            return
         self._reader, self._writer = await open_connection(
-            host=host, port=port, loop=loop, **kwargs)
+            host=self._host, port=self._port, loop=self._loop, **self._kwargs)

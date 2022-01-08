@@ -8,6 +8,7 @@ from aioraven.data import convert_float
 from aioraven.data import convert_hex_to_bytes
 from aioraven.data import convert_int
 from aioraven.data import DeviceInfo
+from aioraven.data import MeterList
 from aioraven.data import PriceCluster
 
 
@@ -59,6 +60,8 @@ class RAVEnBaseDevice:
         if refresh is not None:
             args['Refresh'] = str(refresh)
         raw = await self._query('get_current_price', 'PriceCluster', args)
+        if not raw:
+            return None
         return PriceCluster(
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
@@ -71,6 +74,8 @@ class RAVEnBaseDevice:
 
     async def get_device_info(self):
         raw = await self._query('get_device_info', 'DeviceInfo')
+        if not raw:
+            return None
         return DeviceInfo(
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             install_code=convert_hex_to_bytes(raw.get('InstallCode')),
@@ -113,7 +118,15 @@ class RAVEnBaseDevice:
         return await self._query('get_meter_info', 'MeterInfo', args)
 
     async def get_meter_list(self):
-        return await self._query('get_meter_list', 'MeterList')
+        raw = await self._query('get_meter_list', 'MeterList')
+        if not raw:
+            return None
+        raw_list = raw.get('MeterMacId') or []
+        if not isinstance(raw_list, list):
+            raw_list = [raw_list]
+        return MeterList(
+            device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
+            meter_mac_ids=[convert_hex_to_bytes(m) for m in raw_list])
 
     async def get_network_info(self):
         return await self._query('get_network_info', 'NetworkInfo')

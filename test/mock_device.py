@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
-async def mock_device(responses):
+async def mock_device(responses=None):
     """
     Create a mock device at a TCP endpoint.
 
@@ -17,17 +17,36 @@ async def mock_device(responses):
 
     :returns: A tuple including the host and port of the TCP endpoint.
     """
-    async def client_connected(reader, writer):
+    if responses is None:
+        responses = {}
+
+    async def client_connected_impl(reader, writer):
         buffer = b''
-        while True:
-            buffer += await reader.read(1)
-            buffer = buffer.lstrip()
-            for k, v in responses.items():
-                if buffer.startswith(k):
-                    writer.write(v)
-                    buffer = buffer[len(k):]
+        try:
+            while True:
+                value = await reader.read(1)
+                if not value:
+                    break
+                buffer += value
+                buffer = buffer.lstrip()
+                for k, v in responses.items():
+                    if buffer.startswith(k):
+                        writer.write(v)
+                        buffer = buffer[len(k):]
+        finally:
+            writer.write_eof()
+            writer.close()
+
+    connections = []
+
+    def client_connected(reader, writer):
+        task = asyncio.create_task(client_connected_impl(reader, writer))
+        connections.append(task)
+        return asyncio.wait_for(task, None)
 
     server = await asyncio.start_server(client_connected, host='127.0.0.1')
     async with server:
         yield server.sockets[0].getsockname()
-    await asyncio.sleep(0)
+    await server.wait_closed()
+    for task in connections:
+        task.cancel()

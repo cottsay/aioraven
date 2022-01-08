@@ -1,18 +1,17 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree as ET
 
 from aioraven.data import MeterList
-from aioraven.serial import RAVEnSerialDevice
+from aioraven.streams import RAVEnNetworkDevice
 import pytest
-from serial import SerialException
 
 from .mock_device import mock_device
 
 
 @pytest.mark.asyncio
-async def test_serial_data():
+async def test_tcp_data():
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -21,7 +20,7 @@ async def test_serial_data():
     }
 
     async with mock_device(responses) as (host, port):
-        async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
+        async with RAVEnNetworkDevice(host, port) as dut:
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
@@ -30,19 +29,17 @@ async def test_serial_data():
 
 
 @pytest.mark.asyncio
-async def test_serial_disconnect():
+async def test_tcp_disconnect():
     async with mock_device() as (host, port):
-        dut = RAVEnSerialDevice(f'socket://{host}:{port}')
+        dut = RAVEnNetworkDevice(host, port)
         await dut.open()
     async with dut:
-        with pytest.raises(SerialException):
-            await dut.get_device_info()
-        with pytest.raises(SerialException):
-            await dut.get_device_info()
+        assert not await dut.get_meter_list()
+        assert not await dut.get_meter_list()
 
 
 @pytest.mark.asyncio
-async def test_serial_incomplete():
+async def test_tcp_incomplete():
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -52,17 +49,17 @@ async def test_serial_incomplete():
     }
 
     async with mock_device(responses) as (host, port):
-        dut = RAVEnSerialDevice(f'socket://{host}:{port}')
+        dut = RAVEnNetworkDevice(host, port)
         await dut.open()
         assert await dut.get_meter_list()
     async with dut:
-        # Serial ports don't get EOF, so we won't see the incomplete
-        # XML element here.
+        with pytest.raises(ET.ParseError):
+            await dut.get_meter_list()
         assert not await dut.get_meter_list()
 
 
 @pytest.mark.asyncio
-async def test_serial_parse_error():
+async def test_tcp_parse_error():
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
             b'</DeviceInfo>',
@@ -73,7 +70,7 @@ async def test_serial_parse_error():
     }
 
     async with mock_device(responses) as (host, port):
-        async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
+        async with RAVEnNetworkDevice(host, port) as dut:
             with pytest.raises(ET.ParseError):
                 await dut.get_device_info()
             actual = await dut.get_meter_list()

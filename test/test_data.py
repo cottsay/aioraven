@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timezone
 
 from aioraven.data import DeviceInfo
+from aioraven.data import MeterList
 from aioraven.data import PriceCluster
 from aioraven.streams import RAVEnNetworkDevice
 from iso4217 import Currency
@@ -32,8 +33,7 @@ async def test_get_device_info():
     }
 
     async with mock_device(responses) as (host, port):
-        async with RAVEnNetworkDevice() as dut:
-            await dut.open(host, port)
+        async with RAVEnNetworkDevice(host, port) as dut:
             actual = await dut.get_device_info()
 
     assert actual == DeviceInfo(
@@ -66,8 +66,7 @@ async def test_get_current_price():
     }
 
     async with mock_device(responses) as (host, port):
-        async with RAVEnNetworkDevice() as dut:
-            await dut.open(host, port)
+        async with RAVEnNetworkDevice(host, port) as dut:
             actual = await dut.get_current_price()
 
     assert actual == PriceCluster(
@@ -80,3 +79,60 @@ async def test_get_current_price():
         tier=8,
         tier_label='Set by User',
         rate_label='Set by User')
+
+
+@pytest.mark.asyncio
+async def test_get_meter_list_zero():
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_meter_list()
+
+    assert actual == MeterList(
+        device_mac_id=b'0123456789ABCDEF',
+        meter_mac_ids=[])
+
+
+@pytest.mark.asyncio
+async def test_get_meter_list_one():
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_meter_list()
+
+    assert actual == MeterList(
+        device_mac_id=b'0123456789ABCDEF',
+        meter_mac_ids=[b'FEDCBA9876543210'])
+
+
+@pytest.mark.asyncio
+async def test_get_meter_list_two():
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <MeterMacId>0xfedcba0123456789</MeterMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_meter_list()
+
+    assert actual == MeterList(
+        device_mac_id=b'0123456789ABCDEF',
+        meter_mac_ids=[b'FEDCBA9876543210', b'FEDCBA0123456789'])

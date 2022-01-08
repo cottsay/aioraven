@@ -1,4 +1,5 @@
 /.coverage
 /build/
+/htmlcov/
 __pycache__/
 .*.swp
