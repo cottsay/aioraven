@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 from datetime import date
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from enum import Enum
 from enum import IntEnum
@@ -11,6 +12,16 @@ from typing import List
 from typing import Tuple
 
 from iso4217 import Currency
+
+
+def convert_bool(raw):
+    if raw is None:
+        return raw
+    if raw == 'Y':
+        return True
+    if raw == 'N':
+        return False
+    raise ValueError(f"Invalid boolean format: '{raw}'")
 
 
 def convert_currency(raw):
@@ -72,6 +83,43 @@ def convert_int(raw):
     return int(raw, 0)
 
 
+def convert_int_formatted(
+    raw, mult=None, div=None, digits_right=None, digits_left=None,
+    suppress_leading_zero=None
+):
+    if raw is None:
+        return raw
+    value = int(raw, 0)
+    if mult is not None:
+        mult = int(mult, 0)
+        value *= mult
+    if div is not None:
+        div = int(div, 0)
+        value /= div
+    precision = ""
+    if digits_right is not None:
+        precision = int(digits_right, 0)
+    width = ""
+    if digits_left is not None:
+        if precision == "":
+            precision = len(str(value).split(".")[-1])
+        width = int(digits_left, 0) + 1 + precision
+    value = "{:0>{width}.{precision}f}".format(value, **locals())
+    if suppress_leading_zero is not None:
+        if suppress_leading_zero == "Y":
+            value = value.lstrip("0")
+            if value[0] == ".":
+                value = "0" + value
+    return value
+
+
+def convert_timedelta(raw):
+    if raw is None:
+        return raw
+    value = int(raw, 0)
+    return timedelta(seconds=value)
+
+
 class ConnectionState(str, Enum):
     """Indicates the current state of the device."""
 
@@ -99,6 +147,13 @@ class DataStatus(IntEnum):
     INVALID_END_TIME = 3
     TOO_MANY = 4
     NONE_AVAILABLE = 5
+
+
+class IntervalChannel(str, Enum):
+    """Profile interval data channels."""
+
+    DELIVERED = "Delivered"
+    RECEIVED = "Received"
 
 
 class IntervalPeriod(IntEnum):
@@ -208,6 +263,7 @@ class InstantaneousDemand:
     demand: str
 
 
+@dataclass
 class LastPeriodUsage:
     """Total consumption for the previous accumulation period."""
 
@@ -258,6 +314,16 @@ class MeterList:
 class NetworkInfo(ConnectionStatus):
     """Information about the network the device is on."""
 
+    device_mac_id: bytes
+    coord_mac_id: bytes
+    status: ConnectionState
+    description: str
+    status_code: bytes
+    ext_pan_id: bytes
+    channel: int
+    short_addr: bytes
+    link_strength: int
+
 
 @dataclass
 class PriceCluster:
@@ -282,8 +348,6 @@ class ProfileData:
     end_time: datetime
     status: DataStatus
     profile_interval_period: IntervalPeriod
-    number_of_periods_delivered: int
-    interval_data: bytes
 
 
 @dataclass
@@ -293,7 +357,7 @@ class ScheduleInfo:
     device_mac_id: bytes
     meter_mac_id: bytes
     event: ScheduledEvent
-    frequency: int
+    frequency: timedelta
     enabled: bool
 
 

@@ -62,6 +62,14 @@ async def test_serial_incomplete():
 
 
 @pytest.mark.asyncio
+async def test_serial_not_open():
+    async with mock_device() as (host, port):
+        dut = RAVEnSerialDevice(f'socket://{host}:{port}')
+        with pytest.raises(RuntimeError):
+            await dut.get_device_info()
+
+
+@pytest.mark.asyncio
 async def test_serial_parse_error():
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
@@ -81,3 +89,10 @@ async def test_serial_parse_error():
     assert actual == MeterList(
         device_mac_id=b'0123456789ABCDEF',
         meter_mac_ids=[])
+
+
+@pytest.mark.asyncio
+async def test_serial_repr():
+    async with mock_device({}) as (host, port):
+        async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
+            assert 'RAVEnSerialDevice' in str(dut)

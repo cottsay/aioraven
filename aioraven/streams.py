@@ -39,7 +39,7 @@ class RAVEnReader:
             info.append('eof')
         if self._exception:
             info.append('e=%r' % self._exception)
-        num_waiters = len(w for t in self._waiters for w in t)
+        num_waiters = sum(len(w) for w in self._waiters.values())
         if num_waiters:
             info.append('w=%d' % num_waiters)
         return '<%s>' % ' '.join(info)
@@ -106,7 +106,7 @@ class RAVEnWriter:
         element_cmd = ET.Element('Command')
         element_name = ET.SubElement(element_cmd, 'Name')
         element_name.text = cmd_name
-        for k, v in args or iter(()):
+        for k, v in (args or {}).items():
             element_arg = ET.SubElement(element_cmd, k)
             element_arg.text = v
         tree = ET.ElementTree(element_cmd)

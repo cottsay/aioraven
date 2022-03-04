@@ -4,6 +4,7 @@
 from xml.etree import ElementTree as ET
 
 from aioraven.data import MeterList
+from aioraven.streams import open_connection
 from aioraven.streams import RAVEnNetworkDevice
 import pytest
 
@@ -59,6 +60,14 @@ async def test_tcp_incomplete():
 
 
 @pytest.mark.asyncio
+async def test_tcp_not_open():
+    async with mock_device() as (host, port):
+        dut = RAVEnNetworkDevice(host, port)
+        with pytest.raises(RuntimeError):
+            await dut.get_device_info()
+
+
+@pytest.mark.asyncio
 async def test_tcp_parse_error():
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
@@ -78,3 +87,17 @@ async def test_tcp_parse_error():
     assert actual == MeterList(
         device_mac_id=b'0123456789ABCDEF',
         meter_mac_ids=[])
+
+
+@pytest.mark.asyncio
+async def test_tcp_repr():
+    async with mock_device() as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            assert 'RAVEnNetworkDevice' in str(dut)
+
+        reader, writer = await open_connection(host, port)
+        try:
+            assert 'RAVEnReader' in str(reader)
+            assert 'RAVEnWriter' in str(writer)
+        finally:
+            writer.close()
