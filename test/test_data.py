@@ -34,7 +34,7 @@ from .mock_device import mock_device
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'),))
+@pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
 async def test_get_current_period_usage(meter):
     responses = {
         b'<Command><Name>get_current_period_usage</Name></Command>':
@@ -75,12 +75,13 @@ async def test_get_current_period_usage(meter):
 
 
 @pytest.mark.asyncio
-async def test_get_current_summation_delivered():
+@pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
+async def test_get_current_summation_delivered(meter):
     responses = {
         b'<Command><Name>get_current_summation_delivered</Name></Command>':
             b'<CurrentSummationDelivered>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <TimeStamp>0x296B2D39</TimeStamp>'
             b'    <SummationDelivered>0x00000010</SummationDelivered>'
             b'    <SummationReceived>0x00000008</SummationReceived>'
@@ -91,10 +92,17 @@ async def test_get_current_summation_delivered():
             b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
             b'</CurrentSummationDelivered>',
     }
+    responses[
+        b'<Command>'
+        b'<Name>get_current_summation_delivered</Name>'
+        b'<MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+        b'</Command>'
+    ] = responses[
+        b'<Command><Name>get_current_summation_delivered</Name></Command>']
 
     async with mock_device(responses) as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
-            actual = await dut.get_current_summation_delivered()
+            actual = await dut.get_current_summation_delivered(meter=meter)
 
     assert actual == CurrentSummationDelivered(
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
@@ -106,12 +114,13 @@ async def test_get_current_summation_delivered():
 
 
 @pytest.mark.asyncio
-async def test_get_current_price():
+@pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
+async def test_get_current_price(meter):
     responses = {
         b'<Command><Name>get_current_price</Name></Command>':
             b'<PriceCluster>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <TimeStamp>0x296B2D39</TimeStamp>'
             b'    <Price>0x18</Price>'
             b'    <Currency>0x348</Currency>'
@@ -121,10 +130,16 @@ async def test_get_current_price():
             b'    <RateLabel>Set by User</RateLabel>'
             b'</PriceCluster>',
     }
+    responses[
+        b'<Command>'
+        b'<Name>get_current_price</Name>'
+        b'<MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+        b'</Command>'
+    ] = responses[b'<Command><Name>get_current_price</Name></Command>']
 
     async with mock_device(responses) as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
-            actual = await dut.get_current_price()
+            actual = await dut.get_current_price(meter=meter)
 
     assert actual == PriceCluster(
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),

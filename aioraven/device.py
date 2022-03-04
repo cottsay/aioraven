@@ -45,7 +45,7 @@ class RAVEnBaseDevice:
 
     async def confirm_message(self, msg_id, meter=None):
         args = {
-            'Id': '0x{msg_id:08X}',
+            'Id': f'0x{msg_id:08X}',
         }
         if meter is not None:
             args['MeterMacId'] = f'0x{meter.hex().upper()}'
@@ -98,7 +98,7 @@ class RAVEnBaseDevice:
                                               refresh=None):
         args = {}
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         if refresh is not None:
             args['Refresh'] = 'Y' if refresh else 'N'
         raw = await self._query(
@@ -143,7 +143,7 @@ class RAVEnBaseDevice:
     async def get_instantaneous_demand(self, *, meter=None, refresh=None):
         args = {}
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         if refresh is not None:
             args['Refresh'] = 'Y' if refresh else 'N'
         raw = await self._query(
@@ -165,7 +165,7 @@ class RAVEnBaseDevice:
     async def get_last_period_usage(self, *, meter=None):
         args = {}
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         raw = await self._query(
             'get_last_period_usage', 'LastPeriodUsage', args)
         if not raw:
@@ -186,7 +186,7 @@ class RAVEnBaseDevice:
     async def get_message(self, *, meter=None, refresh=None):
         args = {}
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         if refresh is not None:
             args['Refresh'] = 'Y' if refresh else 'N'
         raw = await self._query('get_message', 'MessageCluster', args)
@@ -326,14 +326,14 @@ class RAVEnBaseDevice:
             'Duration': str(duration),
         }
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         return await self._query('set_fast_poll', None, args)
 
     async def set_meter_info(self, meter=None, nick=None, account=None,
                              auth=None, host=None, enabled=None):
         args = {}
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         if nick is not None:
             args['NickName'] = str(nick)
         if account is not None:
@@ -353,13 +353,13 @@ class RAVEnBaseDevice:
             'Enabled': 'Y' if enabled else 'N',
         }
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         return await self._query('set_schedule', None, args)
 
     async def set_schedule_default(self, meter=None, event=None):
         args = {}
         if meter is not None:
-            args['MeterMacId'] = '0x{meter.hex().upper()}'
+            args['MeterMacId'] = f'0x{meter.hex().upper()}'
         if event is not None:
             args['Event'] = str(event)
         return await self._query('set_schedule_default', None, args)
