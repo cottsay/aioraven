@@ -34,7 +34,7 @@ from .mock_device import mock_device
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('meter', (b'FEDCBA9876543210',))
+@pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'),))
 async def test_get_current_period_usage(meter):
     responses = {
         b'<Command><Name>get_current_period_usage</Name></Command>':
@@ -65,8 +65,8 @@ async def test_get_current_period_usage(meter):
             )
 
     assert actual == CurrentPeriodUsage(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
         current_usage='0032.00',
@@ -97,8 +97,8 @@ async def test_get_current_summation_delivered():
             actual = await dut.get_current_summation_delivered()
 
     assert actual == CurrentSummationDelivered(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
         summation_delivered='0032.00',
@@ -127,8 +127,8 @@ async def test_get_current_price():
             actual = await dut.get_current_price()
 
     assert actual == PriceCluster(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
         price=0.24,
@@ -160,9 +160,9 @@ async def test_get_device_info():
             actual = await dut.get_device_info()
 
     assert actual == DeviceInfo(
-        device_mac_id=b'0123456789ABCDEF',
-        install_code=b'ABCDEF0123456789',
-        link_key=b'ABCDEF0123456789ABCDEF0123456789',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        install_code=bytes.fromhex('ABCDEF0123456789'),
+        link_key=bytes.fromhex('ABCDEF0123456789ABCDEF0123456789'),
         fw_version='1.21g',
         hw_version='5.55 rev 2',
         image_type='Mocked',
@@ -193,8 +193,8 @@ async def test_get_instantaneous_demand():
             actual = await dut.get_instantaneous_demand()
 
     assert actual == InstantaneousDemand(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
         demand='0032.00')
@@ -223,8 +223,8 @@ async def test_get_last_period_usage():
             actual = await dut.get_last_period_usage()
 
     assert actual == LastPeriodUsage(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         last_usage='0032.00',
         start_date=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
@@ -253,11 +253,11 @@ async def test_get_message():
             actual = await dut.get_message()
 
     assert actual == MessageCluster(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
-        message_id=b'02468ACE',
+        message_id=bytes.fromhex('02468ACE'),
         text='Hello, World!',
         confirmation_required=False,
         confirmed=True,
@@ -285,8 +285,8 @@ async def test_get_meter_info():
             actual = await dut.get_meter_info()
 
     assert actual == MeterInfo(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         meter_type=MeterType.ELECTRIC,
         nick_name='House',
         account='8675309',
@@ -317,14 +317,14 @@ async def test_get_network_info():
             actual = await dut.get_network_info()
 
     assert actual == NetworkInfo(
-        device_mac_id=b'0123456789ABCDEF',
-        coord_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        coord_mac_id=bytes.fromhex('FEDCBA9876543210'),
         status=ConnectionState.CONNECTED,
         description='Network is operational',
-        status_code=b'42',
-        ext_pan_id=b'9876543210ABCDEF',
+        status_code=bytes.fromhex('42'),
+        ext_pan_id=bytes.fromhex('9876543210ABCDEF'),
         channel=24,
-        short_addr=b'5678',
+        short_addr=bytes.fromhex('5678'),
         link_strength=36)
 
 
@@ -342,7 +342,7 @@ async def test_get_meter_list_zero():
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
-        device_mac_id=b'0123456789ABCDEF',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_ids=[])
 
 
@@ -361,8 +361,8 @@ async def test_get_meter_list_one():
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_ids=[b'FEDCBA9876543210'])
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_ids=[bytes.fromhex('FEDCBA9876543210')])
 
 
 @pytest.mark.asyncio
@@ -381,8 +381,10 @@ async def test_get_meter_list_two():
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_ids=[b'FEDCBA9876543210', b'FEDCBA0123456789'])
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_ids=[
+            bytes.fromhex('FEDCBA9876543210'),
+            bytes.fromhex('FEDCBA0123456789')])
 
 
 @pytest.mark.asyncio
@@ -410,8 +412,8 @@ async def test_get_profile_data():
                 IntervalChannel.DELIVERED)
 
     assert actual == ProfileData(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         end_time=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
         status=DataStatus.SUCCESS,
@@ -436,8 +438,8 @@ async def test_get_schedule():
             actual = await dut.get_schedule()
 
     assert actual == ScheduleInfo(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         event=ScheduledEvent.SUMMATION,
         frequency=timedelta(seconds=0x13579bdf),
         enabled=True)
@@ -460,8 +462,8 @@ async def test_get_time():
             actual = await dut.get_time()
 
     assert actual == TimeCluster(
-        device_mac_id=b'0123456789ABCDEF',
-        meter_mac_id=b'FEDCBA9876543210',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         utc_time=datetime(
             2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
         local_time=datetime(2022, 1, 6, 21, 56, 25))

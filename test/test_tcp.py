@@ -25,7 +25,7 @@ async def test_tcp_data():
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
-        device_mac_id=b'0123456789ABCDEF',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_ids=[])
 
 
@@ -85,7 +85,7 @@ async def test_tcp_parse_error():
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
-        device_mac_id=b'0123456789ABCDEF',
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_ids=[])
 
 

@@ -74,7 +74,7 @@ def convert_hex_to_bytes(raw):
         return raw
     if raw.startswith('0x'):
         raw = raw[2:]
-    return raw.upper().encode()
+    return bytes.fromhex(raw)
 
 
 def convert_int(raw):
