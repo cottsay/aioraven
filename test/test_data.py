@@ -1,10 +1,12 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+import warnings
 
 from aioraven.data import ConnectionState
 from aioraven.data import CurrentPeriodUsage
@@ -26,6 +28,8 @@ from aioraven.data import ProfileData
 from aioraven.data import ScheduledEvent
 from aioraven.data import ScheduleInfo
 from aioraven.data import TimeCluster
+from aioraven.protocols import DeviceWarning
+from aioraven.protocols import UnknownCommandWarning
 from aioraven.streams import RAVEnNetworkDevice
 from iso4217 import Currency
 import pytest
@@ -35,20 +39,21 @@ from .mock_device import mock_device
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
+@pytest.mark.timeout(1)
 async def test_get_current_period_usage(meter):
     responses = {
         b'<Command><Name>get_current_period_usage</Name></Command>':
             b'<CurrentPeriodUsage>'
             b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
             b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
-            b'    <TimeStamp>0x296B2D39</TimeStamp>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
             b'    <CurrentUsage>0x00000010</CurrentUsage>'
             b'    <Multiplier>0x00000004</Multiplier>'
             b'    <Divisor>0x00000002</Divisor>'
             b'    <DigitsRight>0x02</DigitsRight>'
             b'    <DigitsLeft>0x04</DigitsLeft>'
             b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
-            b'    <StartDate>0x296B2D38</StartDate>'
+            b'    <StartDate>0x29AAE3A7</StartDate>'
             b'</CurrentPeriodUsage>',
     }
     responses[
@@ -68,21 +73,22 @@ async def test_get_current_period_usage(meter):
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         current_usage='0032.00',
         start_date=datetime(
-            2022, 1, 7, 5, 56, 24, tzinfo=timezone.utc))
+            2022, 2, 25, 0, 47, 35, tzinfo=timezone.utc))
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
+@pytest.mark.timeout(1)
 async def test_get_current_summation_delivered(meter):
     responses = {
         b'<Command><Name>get_current_summation_delivered</Name></Command>':
             b'<CurrentSummationDelivered>'
             b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
             b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
-            b'    <TimeStamp>0x296B2D39</TimeStamp>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
             b'    <SummationDelivered>0x00000010</SummationDelivered>'
             b'    <SummationReceived>0x00000008</SummationReceived>'
             b'    <Multiplier>0x00000004</Multiplier>'
@@ -108,20 +114,21 @@ async def test_get_current_summation_delivered(meter):
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         summation_delivered='0032.00',
         summation_received='0016.00')
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
+@pytest.mark.timeout(1)
 async def test_get_current_price(meter):
     responses = {
         b'<Command><Name>get_current_price</Name></Command>':
             b'<PriceCluster>'
             b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
             b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
-            b'    <TimeStamp>0x296B2D39</TimeStamp>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
             b'    <Price>0x18</Price>'
             b'    <Currency>0x348</Currency>'
             b'    <TrailingDigits>0x02</TrailingDigits>'
@@ -145,7 +152,7 @@ async def test_get_current_price(meter):
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         price=0.24,
         currency=Currency.usd,
         tier=8,
@@ -158,15 +165,15 @@ async def test_get_device_info():
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
             b'<DeviceInfo>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <InstallCode>0xabcdef0123456789</InstallCode>'
-            b'    <LinkKey>0xabcdef0123456789abcdef0123456789</LinkKey>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <InstallCode>0xABCDEF0123456789</InstallCode>'
+            b'    <LinkKey>0xABCDEF0123456789ABCDEF0123456789</LinkKey>'
             b'    <FWVersion>1.21g</FWVersion>'
             b'    <HWVersion>5.55 rev 2</HWVersion>'
             b'    <ImageType>Mocked</ImageType>'
             b'    <Manufacturer>aioraven</Manufacturer>'
             b'    <ModelId>Python</ModelId>'
-            b'    <DateCode>2022010100000042</DateCode>'
+            b'    <DateCode>20220101a0000042</DateCode>'
             b'</DeviceInfo>',
     }
 
@@ -183,7 +190,7 @@ async def test_get_device_info():
         image_type='Mocked',
         manufacturer='aioraven',
         model_id='Python',
-        date_code=(date(2022, 1, 1), 42))
+        date_code=(date(2022, 1, 1), 'a0000042'))
 
 
 @pytest.mark.asyncio
@@ -191,9 +198,9 @@ async def test_get_instantaneous_demand():
     responses = {
         b'<Command><Name>get_instantaneous_demand</Name></Command>':
             b'<InstantaneousDemand>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
-            b'    <TimeStamp>0x296B2D39</TimeStamp>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
             b'    <Demand>0x00000010</Demand>'
             b'    <Multiplier>0x00000004</Multiplier>'
             b'    <Divisor>0x00000002</Divisor>'
@@ -211,7 +218,7 @@ async def test_get_instantaneous_demand():
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         demand='0032.00')
 
 
@@ -220,16 +227,16 @@ async def test_get_last_period_usage():
     responses = {
         b'<Command><Name>get_last_period_usage</Name></Command>':
             b'<LastPeriodUsage>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <LastUsage>0x00000010</LastUsage>'
             b'    <Multiplier>0x00000004</Multiplier>'
             b'    <Divisor>0x00000002</Divisor>'
             b'    <DigitsRight>0x02</DigitsRight>'
             b'    <DigitsLeft>0x04</DigitsLeft>'
             b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
-            b'    <StartDate>0x296B2D39</StartDate>'
-            b'    <EndDate>0x29940BB9</EndDate>'
+            b'    <StartDate>0x29bd58a7</StartDate>'
+            b'    <EndDate>0x29E63727</EndDate>'
             b'</LastPeriodUsage>',
     }
 
@@ -242,9 +249,9 @@ async def test_get_last_period_usage():
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         last_usage='0032.00',
         start_date=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         end_date=datetime(
-            2022, 2, 7, 5, 56, 25, tzinfo=timezone.utc))
+            2022, 4, 11, 0, 47, 35, tzinfo=timezone.utc))
 
 
 @pytest.mark.asyncio
@@ -252,9 +259,9 @@ async def test_get_message():
     responses = {
         b'<Command><Name>get_message</Name></Command>':
             b'<MessageCluster>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
-            b'    <TimeStamp>0x296B2D39</TimeStamp>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
             b'    <Id>0x02468ACE</Id>'
             b'    <Text>Hello, World!</Text>'
             b'    <ConfirmationRequired>N</ConfirmationRequired>'
@@ -271,7 +278,7 @@ async def test_get_message():
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         message_id=bytes.fromhex('02468ACE'),
         text='Hello, World!',
         confirmation_required=False,
@@ -284,8 +291,8 @@ async def test_get_meter_info():
     responses = {
         b'<Command><Name>get_meter_info</Name></Command>':
             b'<MeterInfo>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <MeterType>electric</MeterType>'
             b'    <NickName>House</NickName>'
             b'    <Account>8675309</Account>'
@@ -315,12 +322,12 @@ async def test_get_network_info():
     responses = {
         b'<Command><Name>get_network_info</Name></Command>':
             b'<NetworkInfo>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <CoordMacId>0xfedcba9876543210</CoordMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <CoordMacId>0xFEDCBA9876543210</CoordMacId>'
             b'    <Status>Connected</Status>'
             b'    <Description>Network is operational</Description>'
             b'    <StatusCode>0x42</StatusCode>'
-            b'    <ExtPanId>0x9876543210abcdef</ExtPanId>'
+            b'    <ExtPanId>0x9876543210ABCDEF</ExtPanId>'
             b'    <Channel>24</Channel>'
             b'    <ShortAddr>0x5678</ShortAddr>'
             b'    <LinkStrength>0x24</LinkStrength>'
@@ -348,7 +355,7 @@ async def test_get_meter_list_zero():
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
             b'</MeterList>',
     }
 
@@ -366,8 +373,8 @@ async def test_get_meter_list_one():
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'</MeterList>',
     }
 
@@ -385,8 +392,8 @@ async def test_get_meter_list_two():
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <MeterMacId>0xfedcba0123456789</MeterMacId>'
             b'</MeterList>',
     }
@@ -408,13 +415,13 @@ async def test_get_profile_data():
         b'<Command>'
         b'<Name>get_profile_data</Name>'
         b'<NumberOfPeriods>0x02</NumberOfPeriods>'
-        b'<EndTime>0x296B2D39</EndTime>'
+        b'<EndTime>0x29bd58a7</EndTime>'
         b'<IntervalChannel>Delivered</IntervalChannel>'
         b'</Command>':
             b'<ProfileData>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
-            b'    <EndTime>0x296B2D39</EndTime>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <EndTime>0x29bd58a7</EndTime>'
             b'    <Status>0x00</Status>'
             b'    <ProfileIntervalPeriod>2</ProfileIntervalPeriod>'
             b'</ProfileData>',
@@ -423,14 +430,14 @@ async def test_get_profile_data():
     async with mock_device(responses) as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
             actual = await dut.get_profile_data(
-                2, '0x296B2D39',
+                2, '0x29bd58a7',
                 IntervalChannel.DELIVERED)
 
     assert actual == ProfileData(
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         end_time=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         status=DataStatus.SUCCESS,
         profile_interval_period=IntervalPeriod.THIRTY_MIN)
 
@@ -440,8 +447,8 @@ async def test_get_schedule():
     responses = {
         b'<Command><Name>get_schedule</Name></Command>':
             b'<ScheduleInfo>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <Event>summation</Event>'
             b'    <Frequency>0x13579bdf</Frequency>'
             b'    <Enabled>Y</Enabled>'
@@ -465,10 +472,10 @@ async def test_get_time():
     responses = {
         b'<Command><Name>get_time</Name></Command>':
             b'<TimeCluster>'
-            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
-            b'    <MeterMacId>0xfedcba9876543210</MeterMacId>'
-            b'    <UTCTime>0x296B2D39</UTCTime>'
-            b'    <LocalTime>0x296B2D39</LocalTime>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <UTCTime>0x29bd58a7</UTCTime>'
+            b'    <LocalTime>0x29bce827</LocalTime>'
             b'</TimeCluster>',
     }
 
@@ -480,5 +487,59 @@ async def test_get_time():
         device_mac_id=bytes.fromhex('0123456789ABCDEF'),
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         utc_time=datetime(
-            2022, 1, 7, 5, 56, 25, tzinfo=timezone.utc),
-        local_time=datetime(2022, 1, 6, 21, 56, 25))
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        local_time=datetime(2022, 3, 10, 16, 47, 35))
+
+
+@pytest.mark.asyncio
+async def test_device_warning_generic():
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<Warning>'
+            b'    <Text>Something unexpected happened</Text>'
+            b'</Warning>',
+    }
+
+    with warnings.catch_warnings(record=True) as w:
+        async with mock_device(responses) as (host, port):
+            async with RAVEnNetworkDevice(host, port) as dut:
+                with pytest.raises(asyncio.TimeoutError):
+                    await asyncio.wait_for(dut.get_meter_list(), timeout=0.05)
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeviceWarning)
+        assert 'Something unexpected happened' in str(w[-1].message)
+
+
+@pytest.mark.asyncio
+async def test_device_warning_generic_error():
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<Warning>'
+            b'    <Text>Something unexpected happened</Text>'
+            b'</Warning>',
+    }
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DeviceWarning)
+        async with mock_device(responses) as (host, port):
+            async with RAVEnNetworkDevice(host, port) as dut:
+                with pytest.raises(DeviceWarning):
+                    await dut.get_meter_list()
+
+
+@pytest.mark.asyncio
+async def test_device_warning_unknown_command():
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<Warning>'
+            b'    <Text>Unknown command</Text>'
+            b'</Warning>',
+    }
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DeviceWarning)
+        async with mock_device(responses) as (host, port):
+            async with RAVEnNetworkDevice(host, port) as dut:
+                with pytest.raises(UnknownCommandWarning):
+                    await dut.get_meter_list()

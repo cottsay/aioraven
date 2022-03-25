@@ -2,7 +2,24 @@
 # Licensed under the Apache License, Version 2.0
 
 from asyncio.protocols import Protocol
+import warnings
 import xml.etree.ElementTree as ET
+
+
+class DeviceWarning(Warning):
+    """The device has generated a warning message."""
+
+    def __init__(self, message):
+        super().__init__('Warning from RAVEn device: ' + message)
+
+
+class UnknownCommandWarning(DeviceWarning):
+    """A recently executed command is not supported by the device."""
+
+    MESSAGE = 'Unknown command'
+
+    def __init__(self):
+        super().__init__(self.MESSAGE)
 
 
 class RAVEnReaderProtocol(Protocol):
@@ -41,7 +58,18 @@ class RAVEnReaderProtocol(Protocol):
                 self._reader.set_exception(e)
                 self._reset()
             else:
-                self._reader.feed_element(element)
+                if element.tag == 'Warning':
+                    try:
+                        e = next(iter(element), None)
+                        text = e.text if e is not None else 'Unknown warning'
+                        if text == UnknownCommandWarning.MESSAGE:
+                            warnings.warn(UnknownCommandWarning())
+                        else:
+                            warnings.warn(DeviceWarning(text))
+                    except Warning as e:
+                        self._reader.set_exception(e)
+                else:
+                    self._reader.feed_element(element)
 
     def eof_received(self):
         self._parser.feed(b'</root>')

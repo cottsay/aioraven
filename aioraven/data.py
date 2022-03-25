@@ -16,7 +16,7 @@ from iso4217 import Currency
 
 def convert_bool(raw):
     if raw is None:
-        return raw
+        return None
     if raw == 'Y':
         return True
     if raw == 'N':
@@ -26,7 +26,7 @@ def convert_bool(raw):
 
 def convert_currency(raw):
     if raw is None:
-        return raw
+        return None
     currency = next(filter(lambda c: c.number == int(raw, 0), Currency), None)
     if currency is None:
         raise ValueError(f"Invalid currency number: '{raw}'")
@@ -35,34 +35,35 @@ def convert_currency(raw):
 
 def convert_date(raw):
     if raw is None:
-        return raw
+        return None
     if len(raw) < 8:
         raise ValueError(f"Invalid date format: '{raw}'")
-    return date(int(raw[:4]), int(raw[5:6]), int(raw[7:8]))
+    return date(int(raw[:4]), int(raw[4:6]), int(raw[6:8]))
 
 
 def convert_date_code(raw):
     if raw is None:
-        return raw
+        return None
     if len(raw) < 9:
         raise ValueError(f"Invalid date code format: '{raw}'")
     return (
         convert_date(raw[:8]),
-        int(raw[9:]),
+        raw[8:],
     )
 
 
 def convert_datetime(raw, utc=False):
-    if raw is None:
-        return raw
-    return datetime.fromtimestamp(
-        946645200 + int(raw, 0),
-        tz=timezone.utc if utc else None)
+    if raw is None or raw == 0xffffff:
+        return None
+    value = datetime(
+        2000, 1, 1, 0, 0,
+        tzinfo=timezone.utc if utc else None)
+    return value + timedelta(seconds=int(raw, 0))
 
 
 def convert_float(raw_value, raw_div):
     if raw_value is None:
-        return raw_value
+        return None
     value = float(int(raw_value, 0))
     if raw_div is None:
         return value
@@ -71,7 +72,7 @@ def convert_float(raw_value, raw_div):
 
 def convert_hex_to_bytes(raw):
     if raw is None:
-        return raw
+        return None
     if raw.startswith('0x'):
         raw = raw[2:]
     return bytes.fromhex(raw)
@@ -88,7 +89,7 @@ def convert_int_formatted(
     suppress_leading_zero=None
 ):
     if raw is None:
-        return raw
+        return None
     value = int(raw, 0)
     if mult is not None:
         mult = int(mult, 0)
@@ -115,7 +116,7 @@ def convert_int_formatted(
 
 def convert_timedelta(raw):
     if raw is None:
-        return raw
+        return None
     value = int(raw, 0)
     return timedelta(seconds=value)
 
@@ -250,7 +251,7 @@ class DeviceInfo:
     image_type: str
     manufacturer: str
     model_id: str
-    date_code: Tuple[date, int]
+    date_code: Tuple[date, str]
 
 
 @dataclass
@@ -337,6 +338,7 @@ class PriceCluster:
     tier: int
     tier_label: str
     rate_label: str
+    # TODO(cottsay): Add 'Duration'
 
 
 @dataclass

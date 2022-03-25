@@ -53,13 +53,17 @@ class RAVEnReader:
             self._exception = exc
         for waiters in self._waiters.values():
             while waiters:
-                waiters.pop(0).set_exception(exc)
+                waiter = waiters.pop(0)
+                if not waiter.cancelled():
+                    waiter.set_exception(exc)
 
     def feed_eof(self):
         self._eof = True
         for waiters in self._waiters.values():
             while waiters:
-                waiters.pop(0).set_result(None)
+                waiter = waiters.pop(0)
+                if not waiter.cancelled():
+                    waiter.set_result(None)
 
     def feed_element(self, data):
         self._waiters.setdefault(data.tag, [])
@@ -72,9 +76,11 @@ class RAVEnReader:
                 res[e.tag].append(e.text)
             else:
                 res[e.tag] = e.text
-        if waiters:
-            waiters.pop(0).set_result(res)
-            return
+        while waiters:
+            waiter = waiters.pop(0)
+            if not waiter.cancelled():
+                waiter.set_result(res)
+                break
         else:
             waiters = self._waiters[None]
             if waiters:

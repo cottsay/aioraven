@@ -163,6 +163,7 @@ class RAVEnBaseDevice:
                 raw.get('SuppressLeadingZero')))
 
     async def get_last_period_usage(self, *, meter=None):
+        # TODO(cottsay): This command has not been tested
         args = {}
         if meter is not None:
             args['MeterMacId'] = f'0x{meter.hex().upper()}'
@@ -211,6 +212,7 @@ class RAVEnBaseDevice:
         raw = await self._query('get_meter_info', 'MeterInfo', args)
         if not raw:
             return None
+        # TODO(cottsay): Got unexpected numeric '0x0000' instead of 'electric'
         raw_type = raw.get('MeterType')
         return MeterInfo(
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
@@ -250,6 +252,7 @@ class RAVEnBaseDevice:
             link_strength=convert_int(raw.get('LinkStrength')))
 
     async def get_profile_data(self, count, end, channel, *, meter=None):
+        # TODO(cottsay): This command has not been tested
         args = {
             'NumberOfPeriods': f'0x{count:02X}',
             'EndTime': str(end),
@@ -306,6 +309,7 @@ class RAVEnBaseDevice:
             local_time=convert_datetime(raw.get('LocalTime')))
 
     async def initialize(self):
+        # TODO(cottsay): This command has not been tested
         return await self._query('initialize')
 
     async def restart(self):
@@ -316,6 +320,7 @@ class RAVEnBaseDevice:
             'Price': str(price),
             'TrailingDigits': str(0),
         }
+        # TODO(cottsay): Handle TrailingDigits
         if meter is not None:
             args['MeterMacId'] = str(meter)
         return await self._query('set_current_price', None, args)
