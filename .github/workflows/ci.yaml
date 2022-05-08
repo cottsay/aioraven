@@ -30,8 +30,13 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
-      - run: python -m pip install -e . pytest pytest-asyncio pytest-cov pytest-timeout
-      - run: python -m pytest test --cov --timeout=2
+      - run: >
+          python -m pip install -e .
+          pytest
+          pytest-asyncio
+          pytest-cov
+          pytest-timeout
+      - run: python -m pytest test --cov --cov-report xml:coverage.xml --timeout=2
   yamllint:
     runs-on: ubuntu-latest
     steps:
