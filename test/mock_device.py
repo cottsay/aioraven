@@ -31,8 +31,11 @@ async def mock_device(responses=None):
                 buffer = buffer.lstrip()
                 for k, v in responses.items():
                     if buffer.startswith(k):
-                        writer.write(v)
+                        if v:
+                            writer.write(v)
                         buffer = buffer[len(k):]
+                        del responses[k]
+                        break
         finally:
             writer.write_eof()
             writer.close()
@@ -48,5 +51,11 @@ async def mock_device(responses=None):
     async with server:
         yield server.sockets[0].getsockname()
     await server.wait_closed()
+    if not connections:
+        return
+
+    _, connections = await asyncio.wait(connections, timeout=0.1)
     for task in connections:
         task.cancel()
+    if connections:
+        await asyncio.wait(connections)
