@@ -11,6 +11,14 @@ from serial_asyncio import create_serial_connection
 
 
 async def open_serial_connection(*args, loop=None, **kwargs):
+    """
+    Establish a serial connection to a RAVEn device.
+
+    Positional and keyword arguments are passed to
+    `serial_asyncio.create_serial_connection()`.
+
+    :param loop: The event loop instance to use.
+    """
     if loop is None:
         loop = get_event_loop()
     reader = RAVEnReader(loop=loop)
@@ -23,8 +31,18 @@ async def open_serial_connection(*args, loop=None, **kwargs):
 
 
 class RAVEnSerialDevice(RAVEnStreamDevice):
+    """A serial-connected RAVEn device."""
 
     def __init__(self, url, *args, loop=None, **kwargs):
+        """
+        Construct a RAVEnSerialDevice.
+
+        Additional positional and keyword arguments are passed to
+        `serial_asyncio.create_serial_connection()`.
+
+        :param url: The pyserial URL of the device to connect to.
+        :param loop: The event loop instance to use.
+        """
         self._url = url
         self._args = args
         self._loop = loop
@@ -36,6 +54,7 @@ class RAVEnSerialDevice(RAVEnStreamDevice):
         return '<%s>' % ' '.join(info)
 
     async def open(self):
+        """Open the connection to the RAVEn device."""
         if self._reader or self._writer:
             return
         self._reader, self._writer = await open_serial_connection(

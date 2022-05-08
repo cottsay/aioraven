@@ -1,6 +1,7 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 import xml.etree.ElementTree as ET
 
 from aioraven.data import MeterList
@@ -13,6 +14,7 @@ from .mock_device import mock_device
 
 @pytest.mark.asyncio
 async def test_serial_data():
+    """Verify simple device query behavior."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -31,6 +33,7 @@ async def test_serial_data():
 
 @pytest.mark.asyncio
 async def test_serial_disconnect():
+    """Verify behavior when a device is unexpectedly disconnected."""
     async with mock_device() as (host, port):
         dut = RAVEnSerialDevice(f'socket://{host}:{port}')
         await dut.open()
@@ -43,6 +46,7 @@ async def test_serial_disconnect():
 
 @pytest.mark.asyncio
 async def test_serial_incomplete():
+    """Verify behavior when a partial fragment is received."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -55,14 +59,21 @@ async def test_serial_incomplete():
         dut = RAVEnSerialDevice(f'socket://{host}:{port}')
         await dut.open()
         assert await dut.get_meter_list()
+
+        task = asyncio.create_task(dut.get_meter_list())
+        await asyncio.wait((task,), timeout=0.05)
     async with dut:
-        # Serial ports don't get EOF, so we won't see the incomplete
-        # XML element here.
-        assert not await dut.get_meter_list()
+        # Pyserial doesn't get EOF from sockets, so we won't see the
+        # ET.ParseError we're expecting here. Rather, we'll see a
+        # SerialException stating that the socket was disconnected
+        # (which isn't entirely correct).
+        with pytest.raises(SerialException):
+            assert not await task
 
 
 @pytest.mark.asyncio
 async def test_serial_not_open():
+    """Verify behavior when reading from an unopened device."""
     async with mock_device() as (host, port):
         dut = RAVEnSerialDevice(f'socket://{host}:{port}')
         with pytest.raises(RuntimeError):
@@ -71,6 +82,7 @@ async def test_serial_not_open():
 
 @pytest.mark.asyncio
 async def test_serial_parse_error():
+    """Verify behavior when invalid syntax is received."""
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
             b'</DeviceInfo>',
@@ -93,6 +105,7 @@ async def test_serial_parse_error():
 
 @pytest.mark.asyncio
 async def test_serial_repr():
+    """Verify representation of a serial device."""
     async with mock_device({}) as (host, port):
         async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
             assert 'RAVEnSerialDevice' in str(dut)

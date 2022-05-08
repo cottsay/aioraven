@@ -1,6 +1,7 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 from xml.etree import ElementTree as ET
 
 from aioraven.data import MeterList
@@ -13,6 +14,7 @@ from .mock_device import mock_device
 
 @pytest.mark.asyncio
 async def test_tcp_data():
+    """Verify simple device query behavior."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -31,6 +33,7 @@ async def test_tcp_data():
 
 @pytest.mark.asyncio
 async def test_tcp_disconnect():
+    """Verify behavior when a device is unexpectedly disconnected."""
     async with mock_device() as (host, port):
         dut = RAVEnNetworkDevice(host, port)
         await dut.open()
@@ -41,6 +44,7 @@ async def test_tcp_disconnect():
 
 @pytest.mark.asyncio
 async def test_tcp_incomplete():
+    """Verify behavior when a partial fragment is received."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -53,14 +57,18 @@ async def test_tcp_incomplete():
         dut = RAVEnNetworkDevice(host, port)
         await dut.open()
         assert await dut.get_meter_list()
+
+        task = asyncio.create_task(dut.get_meter_list())
+        await asyncio.wait((task,), timeout=0.05)
     async with dut:
         with pytest.raises(ET.ParseError):
-            await dut.get_meter_list()
+            await task
         assert not await dut.get_meter_list()
 
 
 @pytest.mark.asyncio
 async def test_tcp_not_open():
+    """Verify behavior when reading from an unopened device."""
     async with mock_device() as (host, port):
         dut = RAVEnNetworkDevice(host, port)
         with pytest.raises(RuntimeError):
@@ -69,6 +77,7 @@ async def test_tcp_not_open():
 
 @pytest.mark.asyncio
 async def test_tcp_parse_error():
+    """Verify behavior when invalid syntax is received."""
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
             b'</DeviceInfo>',
@@ -91,6 +100,7 @@ async def test_tcp_parse_error():
 
 @pytest.mark.asyncio
 async def test_tcp_repr():
+    """Verify representation of a network device."""
     async with mock_device() as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
             assert 'RAVEnNetworkDevice' in str(dut)

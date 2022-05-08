@@ -11,6 +11,16 @@ from aioraven.protocols import RAVEnReaderProtocol
 
 
 async def open_connection(host=None, port=None, *, loop=None, **kwargs):
+    """
+    Establish a network connection to a RAVEn device.
+
+    Additional optional keyword arguments are passed to
+    `AbstractEventLoop.create_connection()`.
+
+    :param host: The hostname or IP address to connect to.
+    :param port: The TCP port number to connect to.
+    :param loop: The event loop instance to use.
+    """
     if loop is None:
         loop = get_event_loop()
     reader = RAVEnReader(loop=loop)
@@ -25,6 +35,11 @@ class RAVEnReader:
     """Read stanzas from a RAVEn device."""
 
     def __init__(self, loop=None):
+        """
+        Construct a RAVEnReader.
+
+        :param loop: The event loop instance to use.
+        """
         if loop is None:
             self._loop = get_event_loop()
         else:
@@ -101,6 +116,11 @@ class RAVEnWriter:
     """Write commands to a RAVEn device."""
 
     def __init__(self, transport):
+        """
+        Construct a RAVEnWriter.
+
+        :param transport: The transport instace to wrap.
+        """
         self._transport = transport
 
     def __repr__(self):
@@ -123,6 +143,7 @@ class RAVEnWriter:
 
 
 class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
+    """Read and write coordination for stream-based RAVEn devices."""
 
     _reader = None
     _writer = None
@@ -155,8 +176,19 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
 
 
 class RAVEnNetworkDevice(RAVEnStreamDevice):
+    """A network-connected RAVEn device."""
 
     def __init__(self, host=None, port=None, *, loop=None, **kwargs):
+        """
+        Construct a RAVEnNetworkDevice.
+
+        Additional optional keyword arguments are passed to
+        `AbstractEventLoop.create_connection()`.
+
+        :param host: The hostname or IP address to connect to.
+        :param port: The TCP port number to connect to.
+        :param loop: The event loop instance to use.
+        """
         self._host = host
         self._port = port
         self._loop = loop
@@ -169,6 +201,7 @@ class RAVEnNetworkDevice(RAVEnStreamDevice):
         return '<%s>' % ' '.join(info)
 
     async def open(self):
+        """Open the connection to the RAVEn device."""
         if self._reader or self._writer:
             return
         self._reader, self._writer = await open_connection(

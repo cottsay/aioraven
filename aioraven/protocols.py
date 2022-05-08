@@ -10,6 +10,11 @@ class DeviceWarning(Warning):
     """The device has generated a warning message."""
 
     def __init__(self, message):
+        """
+        Construct a DeviceWarning.
+
+        :param message: The reason for which the device is warning us.
+        """
         super().__init__('Warning from RAVEn device: ' + message)
 
 
@@ -19,6 +24,7 @@ class UnknownCommandWarning(DeviceWarning):
     MESSAGE = 'Unknown command'
 
     def __init__(self):
+        """Construct a UnknownCommandWarning."""
         super().__init__(self.MESSAGE)
 
 
@@ -26,6 +32,12 @@ class RAVEnReaderProtocol(Protocol):
     """Deserialize data fragments from a RAVEn device."""
 
     def __init__(self, reader):
+        """
+        Construct a RAVEnRaderProtocol.
+
+        :param reader: The `RAVEnReader` instance to which deserialized
+          fragments are passed.
+        """
         self._reader = reader
         self._parser = None
 

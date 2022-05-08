@@ -39,8 +39,27 @@ from .mock_device import mock_device
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
-@pytest.mark.timeout(1)
+async def test_close_current_period(meter):
+    """Verify behavior of the ``close_current_period`` command."""
+    responses = {
+        b'<Command><Name>close_current_period</Name></Command>': None,
+        b'<Command>'
+        b'<Name>close_current_period</Name>'
+        b'<MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+        b'</Command>': None,
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            await dut.close_current_period(meter=meter)
+
+    assert 1 == len(responses)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
 async def test_get_current_period_usage(meter):
+    """Verify behavior of the ``get_current_period_usage`` command."""
     responses = {
         b'<Command><Name>get_current_period_usage</Name></Command>':
             b'<CurrentPeriodUsage>'
@@ -81,8 +100,8 @@ async def test_get_current_period_usage(meter):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
-@pytest.mark.timeout(1)
 async def test_get_current_summation_delivered(meter):
+    """Verify behavior of the ``get_current_summation_delivered`` command."""
     responses = {
         b'<Command><Name>get_current_summation_delivered</Name></Command>':
             b'<CurrentSummationDelivered>'
@@ -121,8 +140,8 @@ async def test_get_current_summation_delivered(meter):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
-@pytest.mark.timeout(1)
 async def test_get_current_price(meter):
+    """Verify behavior of the ``get_current_price`` command."""
     responses = {
         b'<Command><Name>get_current_price</Name></Command>':
             b'<PriceCluster>'
@@ -162,6 +181,7 @@ async def test_get_current_price(meter):
 
 @pytest.mark.asyncio
 async def test_get_device_info():
+    """Verify behavior of the ``get_device_info`` command."""
     responses = {
         b'<Command><Name>get_device_info</Name></Command>':
             b'<DeviceInfo>'
@@ -195,6 +215,7 @@ async def test_get_device_info():
 
 @pytest.mark.asyncio
 async def test_get_instantaneous_demand():
+    """Verify behavior of the ``get_instantaneous_demand`` command."""
     responses = {
         b'<Command><Name>get_instantaneous_demand</Name></Command>':
             b'<InstantaneousDemand>'
@@ -224,6 +245,7 @@ async def test_get_instantaneous_demand():
 
 @pytest.mark.asyncio
 async def test_get_last_period_usage():
+    """Verify behavior of the ``get_last_period_usage`` command."""
     responses = {
         b'<Command><Name>get_last_period_usage</Name></Command>':
             b'<LastPeriodUsage>'
@@ -256,6 +278,7 @@ async def test_get_last_period_usage():
 
 @pytest.mark.asyncio
 async def test_get_message():
+    """Verify behavior of the ``get_message`` command."""
     responses = {
         b'<Command><Name>get_message</Name></Command>':
             b'<MessageCluster>'
@@ -288,6 +311,7 @@ async def test_get_message():
 
 @pytest.mark.asyncio
 async def test_get_meter_info():
+    """Verify behavior of the ``get_meter_info`` command."""
     responses = {
         b'<Command><Name>get_meter_info</Name></Command>':
             b'<MeterInfo>'
@@ -319,6 +343,7 @@ async def test_get_meter_info():
 
 @pytest.mark.asyncio
 async def test_get_network_info():
+    """Verify behavior of the ``get_network_info`` command."""
     responses = {
         b'<Command><Name>get_network_info</Name></Command>':
             b'<NetworkInfo>'
@@ -352,6 +377,7 @@ async def test_get_network_info():
 
 @pytest.mark.asyncio
 async def test_get_meter_list_zero():
+    """Verify behavior of the ``get_meter_list`` command."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -370,6 +396,7 @@ async def test_get_meter_list_zero():
 
 @pytest.mark.asyncio
 async def test_get_meter_list_one():
+    """Verify behavior of the ``get_meter_list`` command."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -389,6 +416,7 @@ async def test_get_meter_list_one():
 
 @pytest.mark.asyncio
 async def test_get_meter_list_two():
+    """Verify behavior of the ``get_meter_list`` command."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<MeterList>'
@@ -411,6 +439,7 @@ async def test_get_meter_list_two():
 
 @pytest.mark.asyncio
 async def test_get_profile_data():
+    """Verify behavior of the ``get_profile_data`` command."""
     responses = {
         b'<Command>'
         b'<Name>get_profile_data</Name>'
@@ -444,6 +473,7 @@ async def test_get_profile_data():
 
 @pytest.mark.asyncio
 async def test_get_schedule():
+    """Verify behavior of the ``get_schedule`` command."""
     responses = {
         b'<Command><Name>get_schedule</Name></Command>':
             b'<ScheduleInfo>'
@@ -469,6 +499,7 @@ async def test_get_schedule():
 
 @pytest.mark.asyncio
 async def test_get_time():
+    """Verify behavior of the ``get_time`` command."""
     responses = {
         b'<Command><Name>get_time</Name></Command>':
             b'<TimeCluster>'
@@ -493,6 +524,7 @@ async def test_get_time():
 
 @pytest.mark.asyncio
 async def test_device_warning_generic():
+    """Verify behavior of the ``get_meter_list`` command."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<Warning>'
@@ -513,6 +545,7 @@ async def test_device_warning_generic():
 
 @pytest.mark.asyncio
 async def test_device_warning_generic_error():
+    """Verify behavior of generic device warnings."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<Warning>'
@@ -530,6 +563,7 @@ async def test_device_warning_generic_error():
 
 @pytest.mark.asyncio
 async def test_device_warning_unknown_command():
+    """Verify behavior of the ``Unknown command`` device warning."""
     responses = {
         b'<Command><Name>get_meter_list</Name></Command>':
             b'<Warning>'

@@ -32,6 +32,7 @@ from aioraven.data import TimeCluster
 
 
 class RAVEnBaseDevice:
+    """RAVEn device command implementation."""
 
     async def _query(self, cmd_name, res_name=None, args=None):
         raise NotImplementedError(

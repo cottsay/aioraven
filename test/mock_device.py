@@ -22,8 +22,8 @@ async def mock_device(responses=None):
 
     async def client_connected_impl(reader, writer):
         buffer = b''
-        try:
-            while True:
+        while True:
+            try:
                 value = await reader.read(1)
                 if not value:
                     break
@@ -36,9 +36,10 @@ async def mock_device(responses=None):
                         buffer = buffer[len(k):]
                         del responses[k]
                         break
-        finally:
-            writer.write_eof()
-            writer.close()
+            except asyncio.CancelledError:
+                writer.write_eof()
+                await writer.drain()
+        writer.close()
 
     connections = []
 
