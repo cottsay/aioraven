@@ -3,6 +3,7 @@
 
 import asyncio
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 from aioraven.data import MeterList
@@ -52,6 +53,9 @@ async def test_serial_disconnect():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'darwin',
+    reason="Socket serial protocol doesn't support EOF")
 async def test_serial_incomplete():
     """Verify behavior when a partial fragment is received."""
     responses = {
