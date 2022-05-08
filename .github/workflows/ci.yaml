@@ -36,7 +36,11 @@ jobs:
           pytest-asyncio
           pytest-cov
           pytest-timeout
-      - run: python -m pytest test --cov --cov-report xml:coverage.xml --timeout=2
+      - run: >
+          python -m pytest test
+          --cov
+          --cov-report xml:coverage.xml
+          --timeout=2
   yamllint:
     runs-on: ubuntu-latest
     steps:
