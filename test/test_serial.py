@@ -42,14 +42,22 @@ async def test_serial_data():
 @pytest.mark.asyncio
 async def test_serial_disconnect():
     """Verify behavior when a device is unexpectedly disconnected."""
-    async with mock_device() as (host, port):
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses) as (host, port):
         dut = RAVEnSerialDevice(f'socket://{host}:{port}')
         await dut.open()
+        assert await dut.get_meter_list()
     async with dut:
         with pytest.raises(SerialException):
-            await dut.get_device_info()
+            await dut.get_meter_list()
         with pytest.raises(SerialException):
-            await dut.get_device_info()
+            await dut.get_meter_list()
 
 
 @pytest.mark.asyncio

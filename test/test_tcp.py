@@ -34,9 +34,17 @@ async def test_tcp_data():
 @pytest.mark.asyncio
 async def test_tcp_disconnect():
     """Verify behavior when a device is unexpectedly disconnected."""
-    async with mock_device() as (host, port):
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses) as (host, port):
         dut = RAVEnNetworkDevice(host, port)
         await dut.open()
+        assert await dut.get_meter_list()
     async with dut:
         assert not await dut.get_meter_list()
         assert not await dut.get_meter_list()
