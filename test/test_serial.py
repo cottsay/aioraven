@@ -40,6 +40,9 @@ async def test_serial_data():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.platform == 'darwin',
+    reason="Socket serial protocol doesn't support EOF")
 async def test_serial_disconnect():
     """Verify behavior when a device is unexpectedly disconnected."""
     responses = {
