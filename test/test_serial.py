@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import asyncio
+import os
 import xml.etree.ElementTree as ET
 
 from aioraven.data import MeterList
@@ -10,6 +11,12 @@ import pytest
 from serial import SerialException
 
 from .mock_device import mock_device
+
+
+if os.name == "nt":
+    pytest.skip(
+        "Socket serial protocol is currently broken with pyserial_asyncio",
+        allow_module_level=True)
 
 
 @pytest.mark.asyncio
