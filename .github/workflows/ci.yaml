@@ -30,7 +30,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
-      - run: python -m pip install -e . pytest pytest-timeout
+      - run: python -m pip install -e . pytest pytest-asyncio pytest-timeout
       - run: python -m pytest test --timeout=2
   yamllint:
     runs-on: ubuntu-latest
