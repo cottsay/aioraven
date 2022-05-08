@@ -24,10 +24,10 @@ async def open_connection(host=None, port=None, *, loop=None, **kwargs):
     if loop is None:
         loop = get_event_loop()
     reader = RAVEnReader(loop=loop)
-    protocol = RAVEnReaderProtocol(reader)
+    protocol = RAVEnReaderProtocol(reader, loop=loop)
     transport, _ = await loop.create_connection(
         lambda: protocol, host=host, port=port, **kwargs)
-    writer = RAVEnWriter(transport)
+    writer = RAVEnWriter(transport, protocol)
     return reader, writer
 
 
@@ -115,13 +115,15 @@ class RAVEnReader:
 class RAVEnWriter:
     """Write commands to a RAVEn device."""
 
-    def __init__(self, transport):
+    def __init__(self, transport, protocol):
         """
         Construct a RAVEnWriter.
 
-        :param transport: The transport instace to wrap.
+        :param transport: The transport instance to wrap.
+        :param protocol: The reader protocol for the connection.
         """
         self._transport = transport
+        self._protocol = protocol
 
     def __repr__(self):
         info = [self.__class__.__name__]
@@ -141,6 +143,9 @@ class RAVEnWriter:
     def close(self):
         return self._transport.close()
 
+    async def wait_closed(self):
+        await self._protocol._get_close_waiter(self)
+
 
 class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
     """Read and write coordination for stream-based RAVEn devices."""
@@ -154,6 +159,10 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
     async def close(self):
         if self._writer:
             self._writer.close()
+            try:
+                await self._writer.wait_closed()
+            except IOError:
+                pass
             self._reader = None
             self._writer = None
 
