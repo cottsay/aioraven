@@ -114,6 +114,18 @@ def convert_int_formatted(
     return value
 
 
+def convert_price(raw_value, raw_div, exponent):
+    value = str(convert_float(raw_value, raw_div))
+    if exponent is not None:
+        major, minor = value.split('.', 1)
+        if exponent == 0 and minor == '0':
+            return major
+        missing = exponent - len(minor)
+        if missing > 0:
+            value += '0' * missing
+    return value
+
+
 def convert_timedelta(raw):
     if raw is None:
         return None

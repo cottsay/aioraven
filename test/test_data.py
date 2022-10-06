@@ -148,9 +148,9 @@ async def test_get_current_price(meter):
             b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
             b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
             b'    <TimeStamp>0x29bd58a7</TimeStamp>'
-            b'    <Price>0x18</Price>'
+            b'    <Price>0xc8</Price>'
             b'    <Currency>0x348</Currency>'
-            b'    <TrailingDigits>0x02</TrailingDigits>'
+            b'    <TrailingDigits>0x03</TrailingDigits>'
             b'    <Tier>0x08</Tier>'
             b'    <TierLabel>Set by User</TierLabel>'
             b'    <RateLabel>Set by User</RateLabel>'
@@ -172,7 +172,7 @@ async def test_get_current_price(meter):
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
-        price=0.24,
+        price='0.20',
         currency=Currency.usd,
         tier=8,
         tier_label='Set by User',

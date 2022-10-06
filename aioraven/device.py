@@ -6,10 +6,10 @@ from aioraven.data import convert_bool
 from aioraven.data import convert_currency
 from aioraven.data import convert_date_code
 from aioraven.data import convert_datetime
-from aioraven.data import convert_float
 from aioraven.data import convert_hex_to_bytes
 from aioraven.data import convert_int
 from aioraven.data import convert_int_formatted
+from aioraven.data import convert_price
 from aioraven.data import convert_timedelta
 from aioraven.data import CurrentPeriodUsage
 from aioraven.data import CurrentSummationDelivered
@@ -85,12 +85,16 @@ class RAVEnBaseDevice:
         raw = await self._query('get_current_price', 'PriceCluster', args)
         if not raw:
             return None
+        currency = convert_currency(raw.get('Currency'))
         return PriceCluster(
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
             time_stamp=convert_datetime(raw.get('TimeStamp'), True),
-            price=convert_float(raw.get('Price'), raw.get('TrailingDigits')),
-            currency=convert_currency(raw.get('Currency')),
+            price=convert_price(
+                raw.get('Price'),
+                raw.get('TrailingDigits'),
+                currency.exponent if currency else None),
+            currency=currency,
             tier=convert_int(raw.get('Tier')),
             tier_label=raw.get('TierLabel'),
             rate_label=raw.get('RateLabel'))
