@@ -1,5 +1,7 @@
+/*.egg-info/
 /.coverage
 /build/
+/dist/
 /htmlcov/
 __pycache__/
 .*.swp
