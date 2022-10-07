@@ -136,7 +136,8 @@ def convert_timedelta(raw):
 class ConnectionState(str, Enum):
     """Indicates the current state of the device."""
 
-    __str__ = str.__str__
+    def __str__(self):
+        return super().__str__()
 
     INITIALIZING = 'Initializing'
     NETWORK_DISCOVERY = 'Network Discovery'
@@ -185,7 +186,8 @@ class IntervalPeriod(IntEnum):
 class MessageQueue(str, Enum):
     """Types of queues messages can occupy."""
 
-    __str__ = str.__str__
+    def __str__(self):
+        return super().__str__()
 
     ACTIVE = 'Active'
     CANCEL_PENDING = 'Cancel Pending'
@@ -194,7 +196,8 @@ class MessageQueue(str, Enum):
 class MeterType(str, Enum):
     """Types of meters to connect to."""
 
-    __str__ = str.__str__
+    def __str__(self):
+        return super().__str__()
 
     ELECTRIC = 'electric'
     GAS = 'gas'
@@ -205,7 +208,8 @@ class MeterType(str, Enum):
 class ScheduledEvent(str, Enum):
     """Types of events which can be scheduled."""
 
-    __str__ = str.__str__
+    def __str__(self):
+        return super().__str__()
 
     TIME = 'time'
     PRICE = 'price'
