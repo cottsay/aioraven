@@ -139,6 +139,40 @@ async def test_get_current_summation_delivered(meter):
 
 
 @pytest.mark.asyncio
+async def test_get_current_summation_delivered_no_received():
+    """
+    Verify behavior of the ``get_current_summation_delivered`` command without
+    SummationReceived.
+    """
+    responses = {
+        b'<Command><Name>get_current_summation_delivered</Name></Command>':
+            b'<CurrentSummationDelivered>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <SummationDelivered>0x00000010</SummationDelivered>'
+            b'    <Multiplier>0x00000004</Multiplier>'
+            b'    <Divisor>0x00000002</Divisor>'
+            b'    <DigitsRight>0x02</DigitsRight>'
+            b'    <DigitsLeft>0x04</DigitsLeft>'
+            b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
+            b'</CurrentSummationDelivered>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_current_summation_delivered()
+
+    assert actual == CurrentSummationDelivered(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        summation_delivered='0032.00',
+        summation_received=None)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize('meter', (bytes.fromhex('FEDCBA9876543210'), None))
 async def test_get_current_price(meter):
     """Verify behavior of the ``get_current_price`` command."""
@@ -172,6 +206,75 @@ async def test_get_current_price(meter):
         meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
         time_stamp=datetime(
             2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        price='0.20',
+        currency=Currency.usd,
+        tier=8,
+        tier_label='Set by User',
+        rate_label='Set by User')
+
+
+@pytest.mark.asyncio
+async def test_get_current_price_no_currency():
+    """
+    Verify behavior of the ``get_current_price`` command without Currency.
+    """
+    responses = {
+        b'<Command><Name>get_current_price</Name></Command>':
+            b'<PriceCluster>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <Price>0xc8</Price>'
+            b'    <TrailingDigits>0x03</TrailingDigits>'
+            b'    <Tier>0x08</Tier>'
+            b'    <TierLabel>Set by User</TierLabel>'
+            b'    <RateLabel>Set by User</RateLabel>'
+            b'</PriceCluster>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_current_price()
+
+    assert actual == PriceCluster(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        price='0.2',
+        currency=None,
+        tier=8,
+        tier_label='Set by User',
+        rate_label='Set by User')
+
+
+@pytest.mark.asyncio
+async def test_get_current_price_no_time_stamp():
+    """
+    Verify behavior of the ``get_current_price`` command without TimeStamp.
+    """
+    responses = {
+        b'<Command><Name>get_current_price</Name></Command>':
+            b'<PriceCluster>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <Price>0xc8</Price>'
+            b'    <Currency>0x348</Currency>'
+            b'    <TrailingDigits>0x03</TrailingDigits>'
+            b'    <Tier>0x08</Tier>'
+            b'    <TierLabel>Set by User</TierLabel>'
+            b'    <RateLabel>Set by User</RateLabel>'
+            b'</PriceCluster>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_current_price()
+
+    assert actual == PriceCluster(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=None,
         price='0.20',
         currency=Currency.usd,
         tier=8,
@@ -227,7 +330,39 @@ async def test_get_instantaneous_demand():
             b'    <Divisor>0x00000002</Divisor>'
             b'    <DigitsRight>0x02</DigitsRight>'
             b'    <DigitsLeft>0x04</DigitsLeft>'
-            b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
+            b'    <SuppressLeadingZero>Y</SuppressLeadingZero>'
+            b'</InstantaneousDemand>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_instantaneous_demand()
+
+    assert actual == InstantaneousDemand(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        demand='32.00')
+
+
+@pytest.mark.asyncio
+async def test_get_instantaneous_demand_no_slz():
+    """
+    Verify behavior of the ``get_instantaneous_demand`` command without
+    SuppressLeadingZero.
+    """
+    responses = {
+        b'<Command><Name>get_instantaneous_demand</Name></Command>':
+            b'<InstantaneousDemand>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <Demand>0x00000010</Demand>'
+            b'    <Multiplier>0x00000004</Multiplier>'
+            b'    <Divisor>0x00000002</Divisor>'
+            b'    <DigitsRight>0x02</DigitsRight>'
+            b'    <DigitsLeft>0x04</DigitsLeft>'
             b'</InstantaneousDemand>',
     }
 
@@ -241,6 +376,70 @@ async def test_get_instantaneous_demand():
         time_stamp=datetime(
             2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         demand='0032.00')
+
+
+@pytest.mark.asyncio
+async def test_get_instantaneous_demand_no_digits_right():
+    """
+    Verify behavior of the ``get_instantaneous_demand`` command without
+    DigitsRight.
+    """
+    responses = {
+        b'<Command><Name>get_instantaneous_demand</Name></Command>':
+            b'<InstantaneousDemand>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <Demand>0x00000010</Demand>'
+            b'    <Multiplier>0x00000004</Multiplier>'
+            b'    <Divisor>0x00000002</Divisor>'
+            b'    <DigitsLeft>0x04</DigitsLeft>'
+            b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
+            b'</InstantaneousDemand>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_instantaneous_demand()
+
+    assert actual == InstantaneousDemand(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        demand='0032.0')
+
+
+@pytest.mark.asyncio
+async def test_get_instantaneous_demand_no_digits_left():
+    """
+    Verify behavior of the ``get_instantaneous_demand`` command without
+    DigitsLeft.
+    """
+    responses = {
+        b'<Command><Name>get_instantaneous_demand</Name></Command>':
+            b'<InstantaneousDemand>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <Demand>0x00000010</Demand>'
+            b'    <Multiplier>0x00000004</Multiplier>'
+            b'    <Divisor>0x00000002</Divisor>'
+            b'    <DigitsRight>0x02</DigitsRight>'
+            b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
+            b'</InstantaneousDemand>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_instantaneous_demand()
+
+    assert actual == InstantaneousDemand(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        demand='32.00')
 
 
 @pytest.mark.asyncio
