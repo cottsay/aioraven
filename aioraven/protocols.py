@@ -81,8 +81,8 @@ class RAVEnReaderProtocol(Protocol):
                 _, element = next(events)
             except StopIteration:
                 return
-            except ET.ParseError as e:
-                self._reader.set_exception(e)
+            except ET.ParseError as err:
+                self._reader.set_exception(err)
                 self._reset()
             else:
                 if element.tag == 'Warning':
@@ -93,8 +93,8 @@ class RAVEnReaderProtocol(Protocol):
                             warnings.warn(UnknownCommandWarning())
                         else:
                             warnings.warn(DeviceWarning(text))
-                    except Warning as e:
-                        self._reader.set_exception(e)
+                    except Warning as err:
+                        self._reader.set_exception(err)
                 else:
                     self._reader.feed_element(element)
 
@@ -103,8 +103,8 @@ class RAVEnReaderProtocol(Protocol):
 
         try:
             self._parser.close()
-        except ET.ParseError as e:
-            self._reader.set_exception(e)
+        except ET.ParseError as err:
+            self._reader.set_exception(err)
         finally:
             self._reader.feed_eof()
 
