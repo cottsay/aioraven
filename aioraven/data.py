@@ -70,6 +70,39 @@ def convert_float(raw_value, raw_div):
     return value / 10 ** int(raw_div, 0)
 
 
+def convert_float_formatted(
+    raw,
+    mult=None,
+    div=None,
+    digits_right=None,
+    digits_left=None,
+    suppress_leading_zero=None,
+):
+    if raw is not None:
+        value = float(int(raw, 0))
+        if mult is not None:
+            value *= int(mult, 0)
+        if div is not None:
+            value /= int(div, 0)
+        whole, frac = str(value).split('.', 1)
+        if digits_right is not None:
+            places = int(digits_right, 0)
+            difference = len(frac) - places
+            if difference > 0:
+                frac = str((int(frac) + 5 ** difference) // 10 ** difference)
+            elif difference < 0:
+                frac += '0' * (-difference)
+        if digits_left is not None:
+            whole = format(whole, f'0>{int(digits_left, 0)}')
+        if suppress_leading_zero is not None:
+            if suppress_leading_zero == 'Y':
+                whole = whole.lstrip('0')
+                if not whole:
+                    whole = '0'
+        return f'{whole}.{frac}'
+    return None
+
+
 def convert_hex_to_bytes(raw):
     if raw is None:
         return None
@@ -82,36 +115,6 @@ def convert_int(raw):
     if raw is None:
         return raw
     return int(raw, 0)
-
-
-def convert_int_formatted(
-    raw, mult=None, div=None, digits_right=None, digits_left=None,
-    suppress_leading_zero=None
-):
-    if raw is None:
-        return None
-    value = int(raw, 0)
-    if mult is not None:
-        mult = int(mult, 0)
-        value *= mult
-    if div is not None:
-        div = int(div, 0)
-        value /= div
-    precision = ''
-    if digits_right is not None:
-        precision = int(digits_right, 0)
-    width = ''
-    if digits_left is not None:
-        if precision == '':
-            precision = len(str(value).split('.')[-1])
-        width = int(digits_left, 0) + 1 + precision
-    value = '{:0>{width}.{precision}f}'.format(value, **locals())
-    if suppress_leading_zero is not None:
-        if suppress_leading_zero == 'Y':
-            value = value.lstrip('0')
-            if value[0] == '.':
-                value = '0' + value
-    return value
 
 
 def convert_price(raw_value, raw_div, exponent):
