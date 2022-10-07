@@ -15,59 +15,57 @@ from iso4217 import Currency
 
 
 def convert_bool(raw):
-    if raw is None:
-        return None
-    if raw == 'Y':
-        return True
-    if raw == 'N':
-        return False
-    raise ValueError(f"Invalid boolean format: '{raw}'")
+    if raw is not None:
+        if raw == 'Y':
+            return True
+        elif raw == 'N':
+            return False
+        raise ValueError(f"Invalid boolean format: '{raw}'")
+    return None
 
 
 def convert_currency(raw):
-    if raw is None:
-        return None
-    currency = next(filter(lambda c: c.number == int(raw, 0), Currency), None)
-    if currency is None:
+    if raw is not None:
+        num = int(raw, 0)
+        currency = next(filter(lambda c: c.number == num, Currency), None)
+        if currency is not None:
+            return currency
         raise ValueError(f"Invalid currency number: '{raw}'")
-    return currency
+    return None
 
 
 def convert_date(raw):
-    if raw is None:
-        return None
-    if len(raw) < 8:
+    if raw is not None:
+        if len(raw) >= 8:
+            return date(int(raw[:4]), int(raw[4:6]), int(raw[6:8]))
         raise ValueError(f"Invalid date format: '{raw}'")
-    return date(int(raw[:4]), int(raw[4:6]), int(raw[6:8]))
+    return None
 
 
 def convert_date_code(raw):
-    if raw is None:
-        return None
-    if len(raw) < 9:
+    if raw is not None:
+        if len(raw) >= 9:
+            return (convert_date(raw[:8]), raw[8:])
         raise ValueError(f"Invalid date code format: '{raw}'")
-    return (
-        convert_date(raw[:8]),
-        raw[8:],
-    )
+    return None
 
 
 def convert_datetime(raw, utc=False):
-    if raw is None or raw == 0xffffff:
-        return None
-    value = datetime(
-        2000, 1, 1, 0, 0,
-        tzinfo=timezone.utc if utc else None)
-    return value + timedelta(seconds=int(raw, 0))
+    if raw is not None and raw != 0xffffff:
+        value = datetime(
+            2000, 1, 1, 0, 0,
+            tzinfo=timezone.utc if utc else None)
+        return value + timedelta(seconds=int(raw, 0))
+    return None
 
 
 def convert_float(raw_value, raw_div):
-    if raw_value is None:
-        return None
-    value = float(int(raw_value, 0))
-    if raw_div is None:
+    if raw_value is not None:
+        value = float(int(raw_value, 0))
+        if raw_div is not None:
+            return value / 10.0 ** int(raw_div, 0)
         return value
-    return value / 10 ** int(raw_div, 0)
+    return None
 
 
 def convert_float_formatted(
@@ -104,22 +102,22 @@ def convert_float_formatted(
 
 
 def convert_hex_to_bytes(raw):
-    if raw is None:
-        return None
-    if raw.startswith('0x'):
-        raw = raw[2:]
-    return bytes.fromhex(raw)
+    if raw is not None:
+        if raw.startswith('0x'):
+            raw = raw[2:]
+        return bytes.fromhex(raw)
+    return None
 
 
 def convert_int(raw):
-    if raw is None:
-        return raw
-    return int(raw, 0)
+    if raw is not None:
+        return int(raw, 0)
+    return None
 
 
 def convert_price(raw_value, raw_div, exponent):
     value = str(convert_float(raw_value, raw_div))
-    if exponent is not None:
+    if value is not None and exponent is not None:
         major, minor = value.split('.', 1)
         if exponent == 0 and minor == '0':
             return major
@@ -130,10 +128,9 @@ def convert_price(raw_value, raw_div, exponent):
 
 
 def convert_timedelta(raw):
-    if raw is None:
-        return None
-    value = int(raw, 0)
-    return timedelta(seconds=value)
+    if raw is not None:
+        return timedelta(seconds=int(raw, 0))
+    return None
 
 
 class ConnectionState(str, Enum):
