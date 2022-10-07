@@ -6,9 +6,9 @@ from aioraven.data import convert_bool
 from aioraven.data import convert_currency
 from aioraven.data import convert_date_code
 from aioraven.data import convert_datetime
+from aioraven.data import convert_float_formatted
 from aioraven.data import convert_hex_to_bytes
 from aioraven.data import convert_int
-from aioraven.data import convert_int_formatted
 from aioraven.data import convert_price
 from aioraven.data import convert_timedelta
 from aioraven.data import CurrentPeriodUsage
@@ -67,7 +67,7 @@ class RAVEnBaseDevice:
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
             time_stamp=convert_datetime(raw.get('TimeStamp'), True),
-            current_usage=convert_int_formatted(
+            current_usage=convert_float_formatted(
                 raw.get('CurrentUsage'),
                 raw.get('Multiplier'),
                 raw.get('Divisor'),
@@ -115,14 +115,14 @@ class RAVEnBaseDevice:
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
             time_stamp=convert_datetime(raw.get('TimeStamp'), True),
-            summation_delivered=convert_int_formatted(
+            summation_delivered=convert_float_formatted(
                 raw.get('SummationDelivered'),
                 raw.get('Multiplier'),
                 raw.get('Divisor'),
                 raw.get('DigitsRight'),
                 raw.get('DigitsLeft'),
                 raw.get('SuppressLeadingZero')),
-            summation_received=convert_int_formatted(
+            summation_received=convert_float_formatted(
                 raw.get('SummationReceived'),
                 raw.get('Multiplier'),
                 raw.get('Divisor'),
@@ -159,7 +159,7 @@ class RAVEnBaseDevice:
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
             time_stamp=convert_datetime(raw.get('TimeStamp'), True),
-            demand=convert_int_formatted(
+            demand=convert_float_formatted(
                 raw.get('Demand'),
                 raw.get('Multiplier'),
                 raw.get('Divisor'),
@@ -179,7 +179,7 @@ class RAVEnBaseDevice:
         return LastPeriodUsage(
             device_mac_id=convert_hex_to_bytes(raw.get('DeviceMacId')),
             meter_mac_id=convert_hex_to_bytes(raw.get('MeterMacId')),
-            last_usage=convert_int_formatted(
+            last_usage=convert_float_formatted(
                 raw.get('LastUsage'),
                 raw.get('Multiplier'),
                 raw.get('Divisor'),
