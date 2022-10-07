@@ -1,16 +1,23 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+from asyncio.events import AbstractEventLoop
 from asyncio.events import get_event_loop
+from asyncio.futures import Future
 from asyncio.protocols import Protocol
+from asyncio.transports import BaseTransport
+from typing import Any
+from typing import Optional
 import warnings
 import xml.etree.ElementTree as ET
+
+from aioraven.reader import RAVEnReader
 
 
 class DeviceWarning(Warning):
     """The device has generated a warning message."""
 
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         """
         Construct a DeviceWarning.
 
@@ -24,7 +31,7 @@ class UnknownCommandWarning(DeviceWarning):
 
     MESSAGE = 'Unknown command'
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Construct a UnknownCommandWarning."""
         super().__init__(self.MESSAGE)
 
@@ -32,7 +39,14 @@ class UnknownCommandWarning(DeviceWarning):
 class RAVEnReaderProtocol(Protocol):
     """Deserialize data fragments from a RAVEn device."""
 
-    def __init__(self, reader, loop=None):
+    _closed: Future[None]
+    _reader: Optional[RAVEnReader]
+
+    def __init__(
+        self,
+        reader: RAVEnReader,
+        loop: Optional[AbstractEventLoop] = None,
+    ) -> None:
         """
         Construct a RAVEnRaderProtocol.
 
@@ -45,20 +59,19 @@ class RAVEnReaderProtocol(Protocol):
         else:
             self._loop = loop
         self._reader = reader
-        self._parser = None
         self._closed = self._loop.create_future()
 
-    def _reset(self):
+    def _reset(self) -> None:
         self._parser = ET.XMLPullParser(events=('end',))
         self._parser.feed(b'<?xml version="1.0" encoding="ASCII"?><root>')
 
-    def _get_close_waiter(self, stream):
+    def _get_close_waiter(self, stream: Any) -> Future[None]:
         return self._closed
 
-    def connection_made(self, transport):
+    def connection_made(self, transport: BaseTransport) -> None:
         self._reset()
 
-    def connection_lost(self, exc):
+    def connection_lost(self, exc: Optional[Exception]) -> None:
         if self._reader is not None:
             if exc is None:
                 self._reader.feed_eof()
@@ -70,9 +83,11 @@ class RAVEnReaderProtocol(Protocol):
             else:
                 self._closed.set_exception(exc)
         self._reader = None
-        self._parser = None
 
-    def data_received(self, data):
+    def data_received(self, data: bytes) -> None:
+        if not self._reader:
+            return
+
         self._parser.feed(data)
 
         events = self._parser.read_events()
@@ -88,17 +103,22 @@ class RAVEnReaderProtocol(Protocol):
                 if element.tag == 'Warning':
                     try:
                         e = next(iter(element), None)
-                        text = e.text if e is not None else 'Unknown warning'
-                        if text == UnknownCommandWarning.MESSAGE:
-                            warnings.warn(UnknownCommandWarning())
+                        if e is not None and e.text is not None:
+                            if e.text == UnknownCommandWarning.MESSAGE:
+                                warnings.warn(UnknownCommandWarning())
+                            else:
+                                warnings.warn(DeviceWarning(e.text))
                         else:
-                            warnings.warn(DeviceWarning(text))
+                            warnings.warn(DeviceWarning('Unknown warning'))
                     except Warning as err:
                         self._reader.set_exception(err)
                 else:
                     self._reader.feed_element(element)
 
-    def eof_received(self):
+    def eof_received(self) -> None:
+        if not self._reader:
+            return
+
         self._parser.feed(b'</root>')
 
         try:
@@ -108,7 +128,7 @@ class RAVEnReaderProtocol(Protocol):
         finally:
             self._reader.feed_eof()
 
-    def __del__(self):
+    def __del__(self) -> None:
         try:
             closed = self._closed
         except AttributeError:
