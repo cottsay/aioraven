@@ -97,20 +97,20 @@ def convert_int_formatted(
     if div is not None:
         div = int(div, 0)
         value /= div
-    precision = ""
+    precision = ''
     if digits_right is not None:
         precision = int(digits_right, 0)
-    width = ""
+    width = ''
     if digits_left is not None:
-        if precision == "":
-            precision = len(str(value).split(".")[-1])
+        if precision == '':
+            precision = len(str(value).split('.')[-1])
         width = int(digits_left, 0) + 1 + precision
-    value = "{:0>{width}.{precision}f}".format(value, **locals())
+    value = '{:0>{width}.{precision}f}'.format(value, **locals())
     if suppress_leading_zero is not None:
-        if suppress_leading_zero == "Y":
-            value = value.lstrip("0")
-            if value[0] == ".":
-                value = "0" + value
+        if suppress_leading_zero == 'Y':
+            value = value.lstrip('0')
+            if value[0] == '.':
+                value = '0' + value
     return value
 
 
@@ -138,17 +138,17 @@ class ConnectionState(str, Enum):
 
     __str__ = str.__str__
 
-    INITIALIZING = "Initializing"
-    NETWORK_DISCOVERY = "Network Discovery"
-    JOINING = "Joining"
-    JOIN_FAIL = "Join: Fail"
-    JOIN_SUCCESS = "Join: Success"
-    AUTHENTICATING = "Authenticating"
-    AUTHENTICATING_SUCCESS = "Authenticating: Success"
-    AUTHENTICATING_FAIL = "Authenticating: Fail"
-    CONNECTED = "Connected"
-    DISCONNECTED = "Disconnected"
-    REJOINING = "Rejoining"
+    INITIALIZING = 'Initializing'
+    NETWORK_DISCOVERY = 'Network Discovery'
+    JOINING = 'Joining'
+    JOIN_FAIL = 'Join: Fail'
+    JOIN_SUCCESS = 'Join: Success'
+    AUTHENTICATING = 'Authenticating'
+    AUTHENTICATING_SUCCESS = 'Authenticating: Success'
+    AUTHENTICATING_FAIL = 'Authenticating: Fail'
+    CONNECTED = 'Connected'
+    DISCONNECTED = 'Disconnected'
+    REJOINING = 'Rejoining'
 
 
 class DataStatus(IntEnum):
@@ -165,8 +165,8 @@ class DataStatus(IntEnum):
 class IntervalChannel(str, Enum):
     """Profile interval data channels."""
 
-    DELIVERED = "Delivered"
-    RECEIVED = "Received"
+    DELIVERED = 'Delivered'
+    RECEIVED = 'Received'
 
 
 class IntervalPeriod(IntEnum):
@@ -187,8 +187,8 @@ class MessageQueue(str, Enum):
 
     __str__ = str.__str__
 
-    ACTIVE = "Active"
-    CANCEL_PENDING = "Cancel Pending"
+    ACTIVE = 'Active'
+    CANCEL_PENDING = 'Cancel Pending'
 
 
 class MeterType(str, Enum):
@@ -196,10 +196,10 @@ class MeterType(str, Enum):
 
     __str__ = str.__str__
 
-    ELECTRIC = "electric"
-    GAS = "gas"
-    WATER = "water"
-    OTHER = "other"
+    ELECTRIC = 'electric'
+    GAS = 'gas'
+    WATER = 'water'
+    OTHER = 'other'
 
 
 class ScheduledEvent(str, Enum):
@@ -207,11 +207,11 @@ class ScheduledEvent(str, Enum):
 
     __str__ = str.__str__
 
-    TIME = "time"
-    PRICE = "price"
-    DEMAND = "demand"
-    SUMMATION = "summation"
-    MESSAGE = "message"
+    TIME = 'time'
+    PRICE = 'price'
+    DEMAND = 'demand'
+    SUMMATION = 'summation'
+    MESSAGE = 'message'
 
 
 @dataclass
