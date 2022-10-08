@@ -1,7 +1,10 @@
 # Copyright 2022 Scott K Logan
 # Licensed under the Apache License, Version 2.0
 
+from asyncio.events import AbstractEventLoop
 from asyncio.events import get_event_loop
+from typing import Optional
+from typing import Tuple
 
 from aioraven.protocols import RAVEnReaderProtocol
 from aioraven.streams import RAVEnReader
@@ -10,7 +13,12 @@ from aioraven.streams import RAVEnWriter
 from serial_asyncio import create_serial_connection
 
 
-async def open_serial_connection(*args, loop=None, **kwargs):
+async def open_serial_connection(
+    url: str,
+    *args: int,
+    loop: Optional[AbstractEventLoop] = None,
+    **kwargs: int,
+) -> Tuple[RAVEnReader, RAVEnWriter]:
     """
     Establish a serial connection to a RAVEn device.
 
@@ -25,7 +33,7 @@ async def open_serial_connection(*args, loop=None, **kwargs):
     protocol = RAVEnReaderProtocol(reader, loop=loop)
     kwargs.setdefault('baudrate', 115200)
     transport, _ = await create_serial_connection(
-        loop, lambda: protocol, *args, **kwargs)
+        loop, lambda: protocol, url, *args, **kwargs)
     writer = RAVEnWriter(transport, protocol)
     return reader, writer
 
@@ -33,7 +41,13 @@ async def open_serial_connection(*args, loop=None, **kwargs):
 class RAVEnSerialDevice(RAVEnStreamDevice):
     """A serial-connected RAVEn device."""
 
-    def __init__(self, url, *args, loop=None, **kwargs):
+    def __init__(
+        self,
+        url: str,
+        *args: int,
+        loop: Optional[AbstractEventLoop] = None,
+        **kwargs: int
+    ) -> None:
         """
         Construct a RAVEnSerialDevice.
 
@@ -48,14 +62,14 @@ class RAVEnSerialDevice(RAVEnStreamDevice):
         self._loop = loop
         self._kwargs = kwargs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         info = [self.__class__.__name__]
         info.append('url=%s' % self._url)
         return '<%s>' % ' '.join(info)
 
-    async def open(self):
+    async def open(self) -> None:
         """Open the connection to the RAVEn device."""
         if self._reader or self._writer:
             return
         self._reader, self._writer = await open_serial_connection(
-            url=self._url, *self._args, loop=self._loop, **self._kwargs)
+            self._url, *self._args, loop=self._loop, **self._kwargs)
