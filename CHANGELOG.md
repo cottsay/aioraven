@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.2.1 (2023-09-27)
+------------------
+* Fix IntervalChannel string conversion
+
 0.2.0 (2022-10-07)
 ------------------
 * Fix and rename convert\_int\_formatted function
