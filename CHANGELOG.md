@@ -1,5 +1,10 @@
 ## Changelog for aioraven
 
+0.3.0 (2023-09-27)
+------------------
+* Switch to standards-based python packaging
+* Declare support for Python 3.11
+
 0.2.1 (2023-09-27)
 ------------------
 * Fix IntervalChannel string conversion
