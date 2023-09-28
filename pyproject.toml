@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Asynchronous communication with Rainforest RAVEn devices."
 requires-python = ">=3.9"
-license = {file = "LICENSE"}
+license = {text = "Apache License, Version 2.0"}
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
@@ -33,6 +33,7 @@ test = [
 [project.urls]
 Changelog = "https://github.com/cottsay/aioraven/blob/main/CHANGELOG.md"
 GitHub = "https://github.com/cottsay/aioraven"
+Homepage = "https://github.com/cottsay/aioraven"
 
 [tool.coverage.run]
 source = ["aioraven"]
