@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.3.2 (2023-09-27)
+------------------
+* More consistency fixes for pyproject.toml
+
 0.3.1 (2023-09-27)
 ------------------
 * Consistency fixes for pyproject.toml
