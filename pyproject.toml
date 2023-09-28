@@ -8,6 +8,7 @@ authors = [
     {name = "Scott K Logan", email = "logans@cottsay.net"},
 ]
 description = "Asynchronous communication with Rainforest RAVEn devices."
+readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "Apache License, Version 2.0"}
 classifiers = [
@@ -31,9 +32,9 @@ test = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/cottsay/aioraven"
 Changelog = "https://github.com/cottsay/aioraven/blob/main/CHANGELOG.md"
 GitHub = "https://github.com/cottsay/aioraven"
-Homepage = "https://github.com/cottsay/aioraven"
 
 [tool.coverage.run]
 source = ["aioraven"]
