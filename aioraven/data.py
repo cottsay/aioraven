@@ -194,6 +194,9 @@ class DataStatus(IntEnum):
 class IntervalChannel(str, Enum):
     """Profile interval data channels."""
 
+    def __str__(self) -> str:
+        return super().__str__()
+
     DELIVERED = 'Delivered'
     RECEIVED = 'Received'
 
