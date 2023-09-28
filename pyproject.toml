@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aioraven"
+authors = [
+    {name = "Scott K Logan", email = "logans@cottsay.net"},
+]
+description = "Asynchronous communication with Rainforest RAVEn devices."
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "iso4217",
+    "pyserial>=2.5",
+    "pyserial-asyncio",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.urls]
+Changelog = "https://github.com/cottsay/aioraven/blob/main/CHANGELOG.md"
+GitHub = "https://github.com/cottsay/aioraven"
+
+[tool.coverage.run]
+source = ["aioraven"]
+
+[tool.flake8]
+exclude = [
+  ".git",
+  "build",
+  "__pycache__",
+]
+import-order-style = "google"
+extend_ignore = ["D"]
+
+[tool.mypy]
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+ignore_missing_imports = true
+warn_return_any = true
+warn_unreachable = true
+
+[tool.pydocstyle]
+add_ignore = "D100,D102,D103,D104,D105"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+filterwarnings = [
+    "ignore:The loop argument is deprecated::asyncio",
+    "ignore:Unknown config option. asyncio_mode::_pytest",
+]
+junit_suite_name = "aioraven"
+
+[tool.setuptools.dynamic]
+version = {attr = "aioraven.__version__"}
+
+[tool.setuptools.package-data]
+aioraven = ["py.typed"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = [
+    "test",
+    "test.*",
+]
