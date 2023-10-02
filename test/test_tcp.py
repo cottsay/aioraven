@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import asyncio
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as Et
 
 from aioraven.data import MeterList
 from aioraven.streams import open_connection
@@ -69,7 +69,7 @@ async def test_tcp_incomplete():
         task = asyncio.create_task(dut.get_meter_list())
         await asyncio.wait((task,), timeout=0.05)
     async with dut:
-        with pytest.raises(ET.ParseError):
+        with pytest.raises(Et.ParseError):
             await task
         assert not await dut.get_meter_list()
 
@@ -97,7 +97,7 @@ async def test_tcp_parse_error():
 
     async with mock_device(responses) as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
-            with pytest.raises(ET.ParseError):
+            with pytest.raises(Et.ParseError):
                 await dut.get_device_info()
             actual = await dut.get_meter_list()
 

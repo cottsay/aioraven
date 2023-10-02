@@ -9,7 +9,7 @@ from asyncio.transports import BaseTransport
 from typing import Any
 from typing import Optional
 import warnings
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 
 from aioraven.reader import RAVEnReader
 
@@ -62,7 +62,7 @@ class RAVEnReaderProtocol(Protocol):
         self._closed = self._loop.create_future()
 
     def _reset(self) -> None:
-        self._parser = ET.XMLPullParser(events=('end',))
+        self._parser = Et.XMLPullParser(events=('end',))
         self._parser.feed(b'<?xml version="1.0" encoding="ASCII"?><root>')
 
     def _get_close_waiter(self, stream: Any) -> Future[None]:
@@ -96,7 +96,7 @@ class RAVEnReaderProtocol(Protocol):
                 _, element = next(events)
             except StopIteration:
                 return
-            except ET.ParseError as err:
+            except Et.ParseError as err:
                 self._reader.set_exception(err)
                 self._reset()
             else:
@@ -123,7 +123,7 @@ class RAVEnReaderProtocol(Protocol):
 
         try:
             self._parser.close()
-        except ET.ParseError as err:
+        except Et.ParseError as err:
             self._reader.set_exception(err)
         finally:
             self._reader.feed_eof()

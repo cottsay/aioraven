@@ -11,7 +11,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Tuple
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 
 from aioraven.data import RAVEnData
 from aioraven.device import RAVEnBaseDevice
@@ -49,13 +49,13 @@ class RAVEnWriter:
         cmd_name: str,
         args: Optional[Dict[str, str]] = None,
     ) -> None:
-        element_cmd = ET.Element('Command')
-        element_name = ET.SubElement(element_cmd, 'Name')
+        element_cmd = Et.Element('Command')
+        element_name = Et.SubElement(element_cmd, 'Name')
         element_name.text = cmd_name
         for k, v in (args or {}).items():
-            element_arg = ET.SubElement(element_cmd, k)
+            element_arg = Et.SubElement(element_cmd, k)
             element_arg.text = v
-        tree = ET.ElementTree(element_cmd)
+        tree = Et.ElementTree(element_cmd)
         tree.write(self._transport, encoding='ASCII', xml_declaration=False)
 
     def close(self) -> None:
