@@ -110,6 +110,19 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
             self._reader = None
             self._writer = None
 
+    async def synchronize(self, *, retries: int = 2) -> None:
+        await asyncio.sleep(0.05)
+        for _try in range(retries, -1, -1):
+            try:
+                # Try a few times to communicate with the device,
+                # allowing any data already in the buffer to flush.
+                await self.get_meter_list()
+            except Et.ParseError:
+                if not _try:
+                    raise
+            else:
+                break
+
     async def _query(
         self,
         cmd_name: str,

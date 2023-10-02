@@ -7,6 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import warnings
+import xml.etree.ElementTree as Et
 
 from aioraven.data import ConnectionState
 from aioraven.data import CurrentPeriodUsage
@@ -719,6 +720,76 @@ async def test_get_time():
         utc_time=datetime(
             2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
         local_time=datetime(2022, 3, 10, 16, 47, 35))
+
+
+@pytest.mark.asyncio
+async def test_device_synchronize_clean():
+    """Verify behavior of the ``synchronize`` helper."""
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            await dut.synchronize()
+
+
+@pytest.mark.asyncio
+async def test_device_synchronize_pre_leftovers():
+    """Verify behavior of the ``synchronize`` helper."""
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            b'<MeterList>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'</MeterList>',
+    }
+
+    async with mock_device(responses, b'</Leftovers>') as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            await dut.synchronize()
+
+
+@pytest.mark.asyncio
+async def test_device_synchronize_post_leftovers():
+    """Verify behavior of the ``synchronize`` helper."""
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            [
+                b'</Leftovers>\n'
+                b'<MeterList>'
+                b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+                b'</MeterList>',
+                b'<MeterList>'
+                b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+                b'</MeterList>',
+            ],
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            await dut.synchronize()
+
+
+@pytest.mark.asyncio
+async def test_device_synchronize_persistent_leftovers():
+    """Verify behavior of the ``synchronize`` helper."""
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            [
+                b'</Leftovers>\n'
+                b'<MeterList>'
+                b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+                b'</MeterList>',
+            ] * 3,
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            with pytest.raises(Et.ParseError):
+                await dut.synchronize()
 
 
 @pytest.mark.asyncio
