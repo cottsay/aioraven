@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.4.0 (2023-10-02)
+------------------
+* Add new 'synchronize' function for stream-based devices
+
 0.3.2 (2023-09-27)
 ------------------
 * More consistency fixes for pyproject.toml
