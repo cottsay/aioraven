@@ -4,7 +4,7 @@
 import asyncio
 import os
 import sys
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 
 from aioraven.data import MeterList
 from aioraven.serial import RAVEnSerialDevice
@@ -86,7 +86,7 @@ async def test_serial_incomplete():
         await asyncio.wait((task,), timeout=0.05)
     async with dut:
         # Pyserial doesn't get EOF from sockets, so we won't see the
-        # ET.ParseError we're expecting here. Rather, we'll see a
+        # Et.ParseError we're expecting here. Rather, we'll see a
         # SerialException stating that the socket was disconnected
         # (which isn't entirely correct).
         with pytest.raises(SerialException):
@@ -116,7 +116,7 @@ async def test_serial_parse_error():
 
     async with mock_device(responses) as (host, port):
         async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
-            with pytest.raises(ET.ParseError):
+            with pytest.raises(Et.ParseError):
                 await dut.get_device_info()
             actual = await dut.get_meter_list()
 

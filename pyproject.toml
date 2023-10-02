@@ -46,7 +46,7 @@ exclude = [
   "__pycache__",
 ]
 import-order-style = "google"
-extend_ignore = ["D"]
+extend_ignore = ["A003", "D"]
 
 [tool.mypy]
 disallow_incomplete_defs = true

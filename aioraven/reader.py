@@ -7,7 +7,7 @@ from asyncio.futures import Future
 from typing import Dict
 from typing import List
 from typing import Optional
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 
 from aioraven.data import RAVEnData
 
@@ -48,7 +48,7 @@ class RAVEnReader:
 
     def set_exception(self, exc: Exception) -> None:
         # Only ParseError is recoverable
-        if not isinstance(exc, ET.ParseError):
+        if not isinstance(exc, Et.ParseError):
             self._exception = exc
         for waiters in self._waiters.values():
             while waiters:
@@ -64,7 +64,7 @@ class RAVEnReader:
                 if not waiter.cancelled():
                     waiter.set_result(None)
 
-    def feed_element(self, data: ET.Element) -> None:
+    def feed_element(self, data: Et.Element) -> None:
         self._waiters.setdefault(data.tag, [])
         waiters = self._waiters.get(data.tag, [])
         res: RAVEnData = {}
