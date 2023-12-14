@@ -136,7 +136,10 @@ async def _device_loop(
     buffer = b''
     while True:
         try:
-            value = await reader.read(1)
+            try:
+                value = await reader.read(1)
+            except asyncio.CancelledError:
+                break
             if not value:
                 break
             buffer += value
@@ -209,10 +212,33 @@ async def mock_device(
         await asyncio.wait(pending)
 
 
-async def main(argv: list[str] = sys.argv) -> None:
-    assert len(argv) == 2
-    reader, writer = await serial_asyncio.open_serial_connection(url=argv[1])
+async def connect_standard_streams(
+    loop: Optional[asyncio.AbstractEventLoop] = None
+) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    reader = asyncio.StreamReader()
+    protocol = asyncio.StreamReaderProtocol(reader)
+
+    await loop.connect_read_pipe(lambda: protocol, sys.stdin)
+    write_transport, write_protocol = await loop.connect_write_pipe(
+        asyncio.streams.FlowControlMixin, sys.stdout)
+    writer = asyncio.StreamWriter(
+        write_transport, write_protocol, reader, loop)
+    return reader, writer
+
+
+async def main(argv: list[str] = sys.argv) -> Optional[int]:
+    if len(argv) == 1:
+        reader, writer = await connect_standard_streams()
+    elif len(argv) == 2:
+        reader, writer = await serial_asyncio.open_serial_connection(
+            url=argv[1])
+    else:
+        print(f'Usage: {argv[0]} [DEVICE_PATH]', file=sys.stderr)
+        return 1
     await _device_loop(reader, writer, DEFAULT_RESPONSES)
+    return 0
 
 
 if __name__ == '__main__':
