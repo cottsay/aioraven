@@ -38,6 +38,28 @@ from aioraven.data import ScheduleInfo
 from aioraven.data import TimeCluster
 
 
+class RAVEnWarning(Warning):
+    """The RAVEn device has generated a warning message."""
+
+    def __init__(self, message: str) -> None:
+        """
+        Construct a RAVEnWarning.
+
+        :param message: The reason for which the device is warning us.
+        """
+        super().__init__('Warning from RAVEn device: ' + message)
+
+
+class UnknownRAVEnCommandWarning(RAVEnWarning):
+    """A recently executed command is not supported by the RAVEn device."""
+
+    MESSAGE = 'Unknown command'
+
+    def __init__(self) -> None:
+        """Construct a UnknownRAVEnCommandWarning."""
+        super().__init__(self.MESSAGE)
+
+
 class RAVEnBaseDevice:
     """RAVEn device command implementation."""
 

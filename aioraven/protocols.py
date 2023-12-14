@@ -11,29 +11,9 @@ from typing import Optional
 import warnings
 import xml.etree.ElementTree as Et
 
+from aioraven.device import RAVEnWarning
+from aioraven.device import UnknownRAVEnCommandWarning
 from aioraven.reader import RAVEnReader
-
-
-class DeviceWarning(Warning):
-    """The device has generated a warning message."""
-
-    def __init__(self, message: str) -> None:
-        """
-        Construct a DeviceWarning.
-
-        :param message: The reason for which the device is warning us.
-        """
-        super().__init__('Warning from RAVEn device: ' + message)
-
-
-class UnknownCommandWarning(DeviceWarning):
-    """A recently executed command is not supported by the device."""
-
-    MESSAGE = 'Unknown command'
-
-    def __init__(self) -> None:
-        """Construct a UnknownCommandWarning."""
-        super().__init__(self.MESSAGE)
 
 
 class RAVEnReaderProtocol(Protocol):
@@ -104,12 +84,12 @@ class RAVEnReaderProtocol(Protocol):
                     try:
                         e = next(iter(element), None)
                         if e is not None and e.text is not None:
-                            if e.text == UnknownCommandWarning.MESSAGE:
-                                warnings.warn(UnknownCommandWarning())
+                            if e.text == UnknownRAVEnCommandWarning.MESSAGE:
+                                warnings.warn(UnknownRAVEnCommandWarning())
                             else:
-                                warnings.warn(DeviceWarning(e.text))
+                                warnings.warn(RAVEnWarning(e.text))
                         else:
-                            warnings.warn(DeviceWarning('Unknown warning'))
+                            warnings.warn(RAVEnWarning('Unknown warning'))
                     except Warning as err:
                         self._reader.set_exception(err)
                 else:
