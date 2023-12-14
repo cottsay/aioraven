@@ -29,8 +29,8 @@ from aioraven.data import ProfileData
 from aioraven.data import ScheduledEvent
 from aioraven.data import ScheduleInfo
 from aioraven.data import TimeCluster
-from aioraven.protocols import DeviceWarning
-from aioraven.protocols import UnknownCommandWarning
+from aioraven.device import RAVEnWarning
+from aioraven.device import UnknownRAVEnCommandWarning
 from aioraven.streams import RAVEnNetworkDevice
 from iso4217 import Currency
 import pytest
@@ -809,7 +809,7 @@ async def test_device_warning_generic():
                     await asyncio.wait_for(dut.get_meter_list(), timeout=0.05)
 
         assert len(w) == 1
-        assert issubclass(w[-1].category, DeviceWarning)
+        assert issubclass(w[-1].category, RAVEnWarning)
         assert 'Something unexpected happened' in str(w[-1].message)
 
 
@@ -824,10 +824,10 @@ async def test_device_warning_generic_error():
     }
 
     with warnings.catch_warnings():
-        warnings.simplefilter('error', DeviceWarning)
+        warnings.simplefilter('error', RAVEnWarning)
         async with mock_device(responses) as (host, port):
             async with RAVEnNetworkDevice(host, port) as dut:
-                with pytest.raises(DeviceWarning):
+                with pytest.raises(RAVEnWarning):
                     await dut.get_meter_list()
 
 
@@ -842,8 +842,8 @@ async def test_device_warning_unknown_command():
     }
 
     with warnings.catch_warnings():
-        warnings.simplefilter('error', DeviceWarning)
+        warnings.simplefilter('error', RAVEnWarning)
         async with mock_device(responses) as (host, port):
             async with RAVEnNetworkDevice(host, port) as dut:
-                with pytest.raises(UnknownCommandWarning):
+                with pytest.raises(UnknownRAVEnCommandWarning):
                     await dut.get_meter_list()
