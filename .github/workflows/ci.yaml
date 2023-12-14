@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python -m pip install -U mypy
-      - run: python -m mypy -p aioraven
+      - run: python -m mypy -p aioraven --strict
   pydocstyle:
     runs-on: ubuntu-latest
     steps:

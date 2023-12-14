@@ -72,7 +72,7 @@ def convert_datetime(
     raw: Optional[str],
     utc: bool = False
 ) -> Optional[datetime]:
-    if raw is not None and raw != 0xffffff:
+    if raw is not None and raw != '0xffffff':
         value = datetime(
             2000, 1, 1, 0, 0,
             tzinfo=timezone.utc if utc else None)

@@ -91,7 +91,10 @@ async def open_connection(
     return reader, writer
 
 
-class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
+class RAVEnStreamDevice(
+    RAVEnBaseDevice,
+    AbstractAsyncContextManager['RAVEnStreamDevice']
+):
     """Read and write coordination for stream-based RAVEn devices."""
 
     _reader: Optional[RAVEnReader] = None
@@ -138,11 +141,16 @@ class RAVEnStreamDevice(RAVEnBaseDevice, AbstractAsyncContextManager):
         self._writer.write_cmd(cmd_name, args)
         return await waiter if waiter is not None else None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> 'RAVEnStreamDevice':
         await self.open()
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(
+        self,
+        exc_type: Any,
+        exc_value: Any,
+        traceback: Any
+    ) -> None:
         await self.close()
 
 
