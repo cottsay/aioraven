@@ -4,12 +4,12 @@
 import asyncio
 import os
 import sys
-import xml.etree.ElementTree as Et
 
 from aioraven.data import MeterList
+from aioraven.device import RAVEnConnectionError
+from aioraven.device import RAVEnNotOpenError
 from aioraven.serial import RAVEnSerialDevice
 import pytest
-from serial import SerialException
 
 from .mock_device import mock_device
 
@@ -57,9 +57,9 @@ async def test_serial_disconnect():
         await dut.open()
         assert await dut.get_meter_list()
     async with dut:
-        with pytest.raises(SerialException):
+        with pytest.raises(RAVEnConnectionError):
             await dut.get_meter_list()
-        with pytest.raises(SerialException):
+        with pytest.raises(RAVEnConnectionError):
             await dut.get_meter_list()
 
 
@@ -85,11 +85,7 @@ async def test_serial_incomplete():
         task = asyncio.create_task(dut.get_meter_list())
         await asyncio.wait((task,), timeout=0.05)
     async with dut:
-        # Pyserial doesn't get EOF from sockets, so we won't see the
-        # Et.ParseError we're expecting here. Rather, we'll see a
-        # SerialException stating that the socket was disconnected
-        # (which isn't entirely correct).
-        with pytest.raises(SerialException):
+        with pytest.raises(RAVEnConnectionError):
             assert not await task
 
 
@@ -98,7 +94,7 @@ async def test_serial_not_open():
     """Verify behavior when reading from an unopened device."""
     async with mock_device() as (host, port):
         dut = RAVEnSerialDevice(f'socket://{host}:{port}')
-        with pytest.raises(RuntimeError):
+        with pytest.raises(RAVEnNotOpenError):
             await dut.get_device_info()
 
 
@@ -116,7 +112,7 @@ async def test_serial_parse_error():
 
     async with mock_device(responses) as (host, port):
         async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
-            with pytest.raises(Et.ParseError):
+            with pytest.raises(RAVEnConnectionError):
                 await dut.get_device_info()
             actual = await dut.get_meter_list()
 

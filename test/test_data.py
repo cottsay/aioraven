@@ -7,7 +7,6 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import warnings
-import xml.etree.ElementTree as Et
 
 from aioraven.data import ConnectionState
 from aioraven.data import CurrentPeriodUsage
@@ -29,6 +28,7 @@ from aioraven.data import ProfileData
 from aioraven.data import ScheduledEvent
 from aioraven.data import ScheduleInfo
 from aioraven.data import TimeCluster
+from aioraven.device import RAVEnConnectionError
 from aioraven.device import RAVEnWarning
 from aioraven.device import UnknownRAVEnCommandWarning
 from aioraven.streams import RAVEnNetworkDevice
@@ -788,7 +788,7 @@ async def test_device_synchronize_persistent_leftovers():
 
     async with mock_device(responses) as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
-            with pytest.raises(Et.ParseError):
+            with pytest.raises(RAVEnConnectionError):
                 await dut.synchronize()
 
 
