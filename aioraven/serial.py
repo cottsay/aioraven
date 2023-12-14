@@ -7,7 +7,7 @@ from typing import Optional
 from typing import Tuple
 
 from aioraven.protocols import RAVEnReaderProtocol
-from aioraven.streams import RAVEnReader
+from aioraven.reader import RAVEnReader
 from aioraven.streams import RAVEnStreamDevice
 from aioraven.streams import RAVEnWriter
 from serial_asyncio import create_serial_connection
