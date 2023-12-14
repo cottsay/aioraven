@@ -195,9 +195,10 @@ async def mock_device(
         return asyncio.wait_for(task, None)
 
     server = await asyncio.start_server(client_connected, host='127.0.0.1')
-    async with server:
+    try:
         yield server.sockets[0].getsockname()
-    await server.wait_closed()
+    finally:
+        server.close()
     if not connections:
         return
 
