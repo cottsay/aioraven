@@ -1,5 +1,12 @@
 ## Changelog for aioraven
 
+0.5.0 (2023-12-14)
+------------------
+* Perform strict mypy typing check
+* Move warning classes from protocols to device module
+* Add support for Python 3.12
+* Introduce custom RAVEn exceptions
+
 0.4.0 (2023-10-02)
 ------------------
 * Add new 'synchronize' function for stream-based devices
