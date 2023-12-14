@@ -15,6 +15,8 @@ import xml.etree.ElementTree as Et
 
 from aioraven.data import RAVEnData
 from aioraven.device import RAVEnBaseDevice
+from aioraven.device import RAVEnConnectionError
+from aioraven.device import RAVEnNotOpenError
 from aioraven.protocols import RAVEnReaderProtocol
 from aioraven.reader import RAVEnReader
 
@@ -85,8 +87,11 @@ async def open_connection(
         loop = get_event_loop()
     reader = RAVEnReader(loop=loop)
     protocol = RAVEnReaderProtocol(reader, loop=loop)
-    transport, _ = await loop.create_connection(
-        lambda: protocol, host=host, port=port)
+    try:
+        transport, _ = await loop.create_connection(
+            lambda: protocol, host=host, port=port)
+    except OSError as ex:
+        raise RAVEnConnectionError(f'{ex}') from ex
     writer = RAVEnWriter(transport, protocol)
     return reader, writer
 
@@ -120,7 +125,7 @@ class RAVEnStreamDevice(
                 # Try a few times to communicate with the device,
                 # allowing any data already in the buffer to flush.
                 await self.get_meter_list()
-            except Et.ParseError:
+            except RAVEnConnectionError:
                 if not _try:
                     raise
             else:
@@ -133,13 +138,16 @@ class RAVEnStreamDevice(
         args: Optional[Dict[str, str]] = None,
     ) -> Optional[RAVEnData]:
         if not self._reader or not self._writer:
-            raise RuntimeError('Device is not open')
+            raise RAVEnNotOpenError()
         waiter: Optional[Task[Optional[RAVEnData]]] = None
         if res_name:
             waiter = asyncio.create_task(self._reader.read_tag(res_name))
             await asyncio.sleep(0)
-        self._writer.write_cmd(cmd_name, args)
-        return await waiter if waiter is not None else None
+        try:
+            self._writer.write_cmd(cmd_name, args)
+            return await waiter if waiter is not None else None
+        except (Et.ParseError, IOError) as ex:
+            raise RAVEnConnectionError(f'{ex}') from ex
 
     async def __aenter__(self) -> 'RAVEnStreamDevice':
         await self.open()

@@ -6,10 +6,12 @@ from asyncio.events import get_event_loop
 from typing import Optional
 from typing import Tuple
 
+from aioraven.device import RAVEnConnectionError
 from aioraven.protocols import RAVEnReaderProtocol
 from aioraven.reader import RAVEnReader
 from aioraven.streams import RAVEnStreamDevice
 from aioraven.streams import RAVEnWriter
+from serial import SerialException
 from serial_asyncio import create_serial_connection
 
 
@@ -32,8 +34,11 @@ async def open_serial_connection(
     reader = RAVEnReader(loop=loop)
     protocol = RAVEnReaderProtocol(reader, loop=loop)
     kwargs.setdefault('baudrate', 115200)
-    transport, _ = await create_serial_connection(
-        loop, lambda: protocol, url, *args, **kwargs)
+    try:
+        transport, _ = await create_serial_connection(
+            loop, lambda: protocol, url, *args, **kwargs)
+    except SerialException as ex:
+        raise RAVEnConnectionError(f'{ex}') from ex
     writer = RAVEnWriter(transport, protocol)
     return reader, writer
 

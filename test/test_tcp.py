@@ -2,9 +2,10 @@
 # Licensed under the Apache License, Version 2.0
 
 import asyncio
-from xml.etree import ElementTree as Et
 
 from aioraven.data import MeterList
+from aioraven.device import RAVEnConnectionError
+from aioraven.device import RAVEnNotOpenError
 from aioraven.streams import open_connection
 from aioraven.streams import RAVEnNetworkDevice
 import pytest
@@ -69,7 +70,7 @@ async def test_tcp_incomplete():
         task = asyncio.create_task(dut.get_meter_list())
         await asyncio.wait((task,), timeout=0.05)
     async with dut:
-        with pytest.raises(Et.ParseError):
+        with pytest.raises(RAVEnConnectionError):
             await task
         assert not await dut.get_meter_list()
 
@@ -79,7 +80,7 @@ async def test_tcp_not_open():
     """Verify behavior when reading from an unopened device."""
     async with mock_device() as (host, port):
         dut = RAVEnNetworkDevice(host, port)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(RAVEnNotOpenError):
             await dut.get_device_info()
 
 
@@ -97,7 +98,7 @@ async def test_tcp_parse_error():
 
     async with mock_device(responses) as (host, port):
         async with RAVEnNetworkDevice(host, port) as dut:
-            with pytest.raises(Et.ParseError):
+            with pytest.raises(RAVEnConnectionError):
                 await dut.get_device_info()
             actual = await dut.get_meter_list()
 

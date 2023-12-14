@@ -38,6 +38,18 @@ from aioraven.data import ScheduleInfo
 from aioraven.data import TimeCluster
 
 
+class RAVEnError(IOError):
+    """Base class for RAVEn related exceptions."""
+
+
+class RAVEnConnectionError(RAVEnError):
+    """Communication error with a RAVEn device."""
+
+
+class RAVEnNotOpenError(RAVEnError):
+    """The RAVEn device is not open."""
+
+
 class RAVEnWarning(Warning):
     """The RAVEn device has generated a warning message."""
 
