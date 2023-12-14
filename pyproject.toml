@@ -41,9 +41,9 @@ source = ["aioraven"]
 
 [tool.flake8]
 exclude = [
-  ".git",
-  "build",
-  "__pycache__",
+    ".git",
+    "build",
+    "__pycache__",
 ]
 import-order-style = "google"
 extend_ignore = ["A003", "D"]
