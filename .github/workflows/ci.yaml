@@ -47,7 +47,7 @@ jobs:
           --cov
           --cov-report xml:coverage.xml
           --timeout=2
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
   yamllint:
     runs-on: ubuntu-latest
     steps:
