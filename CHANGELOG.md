@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.5.1 (2024-02-26)
+------------------
+* Treat summation values as a signed number
+
 0.5.0 (2023-12-14)
 ------------------
 * Perform strict mypy typing check
