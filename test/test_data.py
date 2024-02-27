@@ -348,6 +348,71 @@ async def test_get_instantaneous_demand():
 
 
 @pytest.mark.asyncio
+async def test_get_instantaneous_demand_negative():
+    """
+    Verify behavior of the ``get_instantaneous_demand`` command with a
+    negative value.
+    """
+    responses = {
+        b'<Command><Name>get_instantaneous_demand</Name></Command>':
+            b'<InstantaneousDemand>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <Demand>0xFFFFFFF0</Demand>'
+            b'    <Multiplier>0x00000004</Multiplier>'
+            b'    <Divisor>0x00000002</Divisor>'
+            b'    <DigitsRight>0x02</DigitsRight>'
+            b'    <DigitsLeft>0x04</DigitsLeft>'
+            b'    <SuppressLeadingZero>Y</SuppressLeadingZero>'
+            b'</InstantaneousDemand>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_instantaneous_demand()
+
+    assert actual == InstantaneousDemand(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        demand='-32.00')
+
+
+@pytest.mark.asyncio
+async def test_get_instantaneous_demand_negative_no_slz():
+    """
+    Verify behavior of the ``get_instantaneous_demand`` command with a
+    negative value and without SuppressLeadingZero.
+    """
+    responses = {
+        b'<Command><Name>get_instantaneous_demand</Name></Command>':
+            b'<InstantaneousDemand>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <Demand>0xFFFFFFF0</Demand>'
+            b'    <Multiplier>0x00000004</Multiplier>'
+            b'    <Divisor>0x00000002</Divisor>'
+            b'    <DigitsRight>0x02</DigitsRight>'
+            b'    <DigitsLeft>0x04</DigitsLeft>'
+            b'</InstantaneousDemand>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_instantaneous_demand()
+
+    assert actual == InstantaneousDemand(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        demand='-0032.00')
+
+
+@pytest.mark.asyncio
 async def test_get_instantaneous_demand_no_slz():
     """
     Verify behavior of the ``get_instantaneous_demand`` command without
