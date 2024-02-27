@@ -100,13 +100,19 @@ def convert_float_formatted(
     digits_left: Optional[str] = None,
     suppress_leading_zero: Optional[str] = None,
 ) -> Optional[str]:
-    if raw is not None:
-        value = float(int(raw, 0))
+    value_int = convert_int(raw, sign_extend=True)
+    if value_int is not None:
+        value = float(value_int)
         if mult is not None:
             value *= int(mult, 0)
         if div is not None:
             value /= int(div, 0)
         whole, frac = str(value).split('.', 1)
+        if whole.startswith('-'):
+            sign = '-'
+            whole = whole[1:]
+        else:
+            sign = ''
         if digits_right is not None:
             places = int(digits_right, 0)
             difference = len(frac) - places
@@ -121,7 +127,7 @@ def convert_float_formatted(
                 whole = whole.lstrip('0')
                 if not whole:
                     whole = '0'
-        return f'{whole}.{frac}'
+        return f'{sign}{whole}.{frac}'
     return None
 
 
@@ -133,9 +139,16 @@ def convert_hex_to_bytes(raw: Optional[str]) -> Optional[bytes]:
     return None
 
 
-def convert_int(raw: Optional[str]) -> Optional[int]:
+def convert_int(
+    raw: Optional[str],
+    *,
+    sign_extend: bool = False,
+) -> Optional[int]:
     if raw is not None:
-        return int(raw, 0)
+        value = int(raw, 0)
+        if sign_extend:
+            value = (value & 0x7FFFFFFF) - (value & 0x80000000)
+        return value
     return None
 
 
