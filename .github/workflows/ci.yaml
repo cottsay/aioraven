@@ -48,6 +48,8 @@ jobs:
           --cov-report xml:coverage.xml
           --timeout=2
       - uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
   yamllint:
     runs-on: ubuntu-latest
     steps:
