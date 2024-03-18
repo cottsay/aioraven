@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.5.2 (2024-03-17)
+------------------
+* Defer feeding XML data until we likely trigger an event
+
 0.5.1 (2024-02-26)
 ------------------
 * Treat summation values as a signed number
