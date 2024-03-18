@@ -21,6 +21,7 @@ class RAVEnReaderProtocol(Protocol):
 
     _closed: Future[None]
     _reader: Optional[RAVEnReader]
+    _stash: bytes
 
     def __init__(
         self,
@@ -44,6 +45,7 @@ class RAVEnReaderProtocol(Protocol):
     def _reset(self) -> None:
         self._parser = Et.XMLPullParser(events=('end',))
         self._parser.feed(b'<?xml version="1.0" encoding="ASCII"?><root>')
+        self._stash = b''
 
     def _get_close_waiter(self, stream: Any) -> Future[None]:
         return self._closed
@@ -68,7 +70,12 @@ class RAVEnReaderProtocol(Protocol):
         if not self._reader:
             return
 
-        self._parser.feed(data)
+        self._stash += data
+        if b'>' not in data:
+            return
+
+        self._parser.feed(self._stash)
+        self._stash = b''
 
         events = self._parser.read_events()
         while True:
