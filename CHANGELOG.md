@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.5.3 (2024-03-27)
+------------------
+* Fix rounding error for values just under a whole number
+
 0.5.2 (2024-03-17)
 ------------------
 * Defer feeding XML data until we likely trigger an event
