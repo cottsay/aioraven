@@ -118,6 +118,9 @@ def convert_float_formatted(
             difference = len(frac) - places
             if difference > 0:
                 frac = str((int(frac) + 5 ** difference) // 10 ** difference)
+                if len(frac) > places:
+                    whole = str(int(whole) + 1)
+                    frac = frac[1:]
             elif difference < 0:
                 frac += '0' * (-difference)
         if digits_left is not None:
