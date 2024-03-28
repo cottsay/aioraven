@@ -140,6 +140,41 @@ async def test_get_current_summation_delivered(meter):
 
 
 @pytest.mark.asyncio
+async def test_get_current_summation_delivered_rounding():
+    """
+    Verify rounding behavior of the ``get_current_summation_delivered``
+    command.
+    """
+    responses = {
+        b'<Command><Name>get_current_summation_delivered</Name></Command>':
+            b'<CurrentSummationDelivered>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <MeterMacId>0xFEDCBA9876543210</MeterMacId>'
+            b'    <TimeStamp>0x29bd58a7</TimeStamp>'
+            b'    <SummationDelivered>0x00000C7B</SummationDelivered>'
+            b'    <SummationReceived>0x00000644</SummationReceived>'
+            b'    <Multiplier>0x00000002</Multiplier>'
+            b'    <Divisor>0x000000C8</Divisor>'
+            b'    <DigitsRight>0x01</DigitsRight>'
+            b'    <DigitsLeft>0x03</DigitsLeft>'
+            b'    <SuppressLeadingZero>N</SuppressLeadingZero>'
+            b'</CurrentSummationDelivered>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_current_summation_delivered()
+
+    assert actual == CurrentSummationDelivered(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        meter_mac_id=bytes.fromhex('FEDCBA9876543210'),
+        time_stamp=datetime(
+            2022, 3, 11, 0, 47, 35, tzinfo=timezone.utc),
+        summation_delivered='032.0',
+        summation_received='016.0')
+
+
+@pytest.mark.asyncio
 async def test_get_current_summation_delivered_no_received():
     """
     Verify behavior of the ``get_current_summation_delivered`` command without
