@@ -16,7 +16,7 @@ from .mock_device import mock_device
 
 if os.name == 'nt':
     pytest.skip(
-        'Socket serial protocol is currently broken with pyserial_asyncio',
+        'Socket serial protocol is currently broken with pyserial_asyncio_fast',
         allow_module_level=True)
 
 

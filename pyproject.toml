@@ -21,7 +21,7 @@ classifiers = [
 dependencies = [
     "iso4217",
     "pyserial>=2.5",
-    "pyserial-asyncio",
+    "pyserial-asyncio-fast",
 ]
 dynamic = ["version"]
 
