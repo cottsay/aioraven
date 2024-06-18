@@ -3,7 +3,6 @@
 
 import asyncio
 import os
-import sys
 
 from aioraven.data import MeterList
 from aioraven.device import RAVEnConnectionError
@@ -11,12 +10,12 @@ from aioraven.device import RAVEnNotOpenError
 from aioraven.serial import RAVEnSerialDevice
 import pytest
 
-from .mock_device import mock_device
+from .mock_device import mock_pty_device
 
 
 if os.name == 'nt':
     pytest.skip(
-        'Socket serial protocol is currently broken with pyserial_asyncio',
+        'Pseudo-terminals are not supported on non-Unix platforms',
         allow_module_level=True)
 
 
@@ -30,8 +29,8 @@ async def test_serial_data():
             b'</MeterList>',
     }
 
-    async with mock_device(responses) as (host, port):
-        async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
+    async with mock_pty_device(responses) as mock_device:
+        async with RAVEnSerialDevice(mock_device) as dut:
             actual = await dut.get_meter_list()
 
     assert actual == MeterList(
@@ -40,9 +39,6 @@ async def test_serial_data():
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    sys.platform == 'darwin',
-    reason="Socket serial protocol doesn't support EOF")
 async def test_serial_disconnect():
     """Verify behavior when a device is unexpectedly disconnected."""
     responses = {
@@ -52,8 +48,8 @@ async def test_serial_disconnect():
             b'</MeterList>',
     }
 
-    async with mock_device(responses) as (host, port):
-        dut = RAVEnSerialDevice(f'socket://{host}:{port}')
+    async with mock_pty_device(responses) as mock_device:
+        dut = RAVEnSerialDevice(mock_device)
         await dut.open()
         assert await dut.get_meter_list()
     async with dut:
@@ -64,9 +60,6 @@ async def test_serial_disconnect():
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    sys.platform == 'darwin',
-    reason="Socket serial protocol doesn't support EOF")
 async def test_serial_incomplete():
     """Verify behavior when a partial fragment is received."""
     responses = {
@@ -77,8 +70,8 @@ async def test_serial_incomplete():
             b'<DeviceInfo>'
     }
 
-    async with mock_device(responses) as (host, port):
-        dut = RAVEnSerialDevice(f'socket://{host}:{port}')
+    async with mock_pty_device(responses) as mock_device:
+        dut = RAVEnSerialDevice(mock_device)
         await dut.open()
         assert await dut.get_meter_list()
 
@@ -92,8 +85,8 @@ async def test_serial_incomplete():
 @pytest.mark.asyncio
 async def test_serial_not_open():
     """Verify behavior when reading from an unopened device."""
-    async with mock_device() as (host, port):
-        dut = RAVEnSerialDevice(f'socket://{host}:{port}')
+    async with mock_pty_device({}) as mock_device:
+        dut = RAVEnSerialDevice(mock_device)
         with pytest.raises(RAVEnNotOpenError):
             await dut.get_device_info()
 
@@ -110,8 +103,8 @@ async def test_serial_parse_error():
             b'</MeterList>',
     }
 
-    async with mock_device(responses) as (host, port):
-        async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
+    async with mock_pty_device(responses) as mock_device:
+        async with RAVEnSerialDevice(mock_device) as dut:
             with pytest.raises(RAVEnConnectionError):
                 await dut.get_device_info()
             actual = await dut.get_meter_list()
@@ -124,6 +117,6 @@ async def test_serial_parse_error():
 @pytest.mark.asyncio
 async def test_serial_repr():
     """Verify representation of a serial device."""
-    async with mock_device({}) as (host, port):
-        async with RAVEnSerialDevice(f'socket://{host}:{port}') as dut:
+    async with mock_pty_device({}) as mock_device:
+        async with RAVEnSerialDevice(mock_device) as dut:
             assert 'RAVEnSerialDevice' in str(dut)
