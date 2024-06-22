@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.6.0 (2024-06-22)
+------------------
+* Switch to pyserial-asyncio-fast to fix event loop being blocked
+
 0.5.3 (2024-03-27)
 ------------------
 * Fix rounding error for values just under a whole number
