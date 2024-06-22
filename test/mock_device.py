@@ -6,7 +6,9 @@ from collections.abc import AsyncIterator
 from collections.abc import Awaitable
 from collections.abc import MutableMapping
 from contextlib import asynccontextmanager
+import os
 import sys
+from typing import BinaryIO
 from typing import Optional
 from typing import SupportsIndex
 from typing import TypeVar
@@ -167,6 +169,45 @@ async def _device_loop(
 
 
 @asynccontextmanager
+async def mock_pty_device(
+    responses: Optional[_ResponseMapping] = None,
+    initial_buffer: Optional[bytes] = None
+) -> AsyncIterator[str]:
+    if responses is None:
+        responses = DEFAULT_RESPONSES
+
+    import pty
+
+    server, client = pty.openpty()
+
+    server_in = os.fdopen(server, 'rb', 0, closefd=False)
+    server_out = os.fdopen(server, 'wb', 0, closefd=False)
+
+    reader, writer, read_transport = await connect_pipes(server_in, server_out)
+
+    if initial_buffer is not None:
+        writer.write(initial_buffer)
+    task = asyncio.create_task(_device_loop(reader, writer, responses))
+
+    yield os.ttyname(client)
+
+    task.cancel()
+
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+    read_transport.close()
+    writer.close()
+
+    server_in.close()
+    server_out.close()
+    os.close(server)
+    os.close(client)
+
+
+@asynccontextmanager
 async def mock_device(
     responses: Optional[_ResponseMapping] = None,
     initial_buffer: Optional[bytes] = None
@@ -212,32 +253,39 @@ async def mock_device(
         await asyncio.wait(pending)
 
 
-async def connect_standard_streams(
-    loop: Optional[asyncio.AbstractEventLoop] = None
-) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+async def connect_pipes(
+    in_pipe: BinaryIO,
+    out_pipe: BinaryIO,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+) -> tuple[asyncio.StreamReader, asyncio.StreamWriter, asyncio.ReadTransport]:
     if loop is None:
         loop = asyncio.get_event_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)
 
-    await loop.connect_read_pipe(lambda: protocol, sys.stdin)
+    read_transport, _ = await loop.connect_read_pipe(
+        lambda: protocol, in_pipe)
     write_transport, write_protocol = await loop.connect_write_pipe(
-        asyncio.streams.FlowControlMixin, sys.stdout)
+        asyncio.streams.FlowControlMixin, out_pipe)
     writer = asyncio.StreamWriter(
         write_transport, write_protocol, reader, loop)
-    return reader, writer
+    return reader, writer, read_transport
 
 
 async def main(argv: list[str] = sys.argv) -> Optional[int]:
     if len(argv) == 1:
-        reader, writer = await connect_standard_streams()
+        reader, writer, read_transport = await connect_pipes(
+            sys.stdin.buffer, sys.stdout.buffer)
     elif len(argv) == 2:
+        read_transport = None
         reader, writer = await serial_asyncio.open_serial_connection(
             url=argv[1])
     else:
         print(f'Usage: {argv[0]} [DEVICE_PATH]', file=sys.stderr)
         return 1
     await _device_loop(reader, writer, DEFAULT_RESPONSES)
+    if read_transport is not None:
+        read_transport.close()
     return 0
 
 
