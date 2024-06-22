@@ -12,7 +12,7 @@ from aioraven.reader import RAVEnReader
 from aioraven.streams import RAVEnStreamDevice
 from aioraven.streams import RAVEnWriter
 from serial import SerialException
-from serial_asyncio import create_serial_connection
+from serial_asyncio_fast import create_serial_connection
 
 
 async def open_serial_connection(
@@ -25,7 +25,7 @@ async def open_serial_connection(
     Establish a serial connection to a RAVEn device.
 
     Positional and keyword arguments are passed to
-    `serial_asyncio.create_serial_connection()`.
+    `serial_asyncio_fast.create_serial_connection()`.
 
     :param loop: The event loop instance to use.
     """
@@ -57,7 +57,7 @@ class RAVEnSerialDevice(RAVEnStreamDevice):
         Construct a RAVEnSerialDevice.
 
         Additional positional and keyword arguments are passed to
-        `serial_asyncio.create_serial_connection()`.
+        `serial_asyncio_fast.create_serial_connection()`.
 
         :param url: The pyserial URL of the device to connect to.
         :param loop: The event loop instance to use.

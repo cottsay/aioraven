@@ -14,7 +14,7 @@ from typing import SupportsIndex
 from typing import TypeVar
 from typing import Union
 
-import serial_asyncio
+import serial_asyncio_fast
 
 
 _T = TypeVar('_T')
@@ -278,7 +278,7 @@ async def main(argv: list[str] = sys.argv) -> Optional[int]:
             sys.stdin.buffer, sys.stdout.buffer)
     elif len(argv) == 2:
         read_transport = None
-        reader, writer = await serial_asyncio.open_serial_connection(
+        reader, writer = await serial_asyncio_fast.open_serial_connection(
             url=argv[1])
     else:
         print(f'Usage: {argv[0]} [DEVICE_PATH]', file=sys.stderr)
