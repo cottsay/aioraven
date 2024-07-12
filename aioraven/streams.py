@@ -5,7 +5,7 @@ import asyncio
 from asyncio.events import AbstractEventLoop
 from asyncio.events import get_event_loop
 from asyncio.tasks import Task
-from asyncio.transports import BaseTransport
+from asyncio.transports import WriteTransport
 from contextlib import AbstractAsyncContextManager
 from typing import Any
 from typing import Dict
@@ -24,12 +24,9 @@ from aioraven.reader import RAVEnReader
 class RAVEnWriter:
     """Write commands to a RAVEn device."""
 
-    # TODO(cottsay): Deal with BaseTransport vs IO types
-    _transport: Any
-
     def __init__(
         self,
-        transport: BaseTransport,
+        transport: WriteTransport,
         protocol: RAVEnReaderProtocol
     ) -> None:
         """
