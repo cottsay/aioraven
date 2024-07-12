@@ -137,3 +137,12 @@ async def test_serial_timeout_recovery():
             with pytest.raises(asyncio.TimeoutError):
                 await asyncio.wait_for(dut.get_meter_list(), 0.05)
             assert await dut.get_device_info()
+
+
+@pytest.mark.asyncio
+async def test_serial_abort():
+    """Verify behavior of device abort."""
+    async with mock_pty_device({}) as mock_device:
+        async with RAVEnSerialDevice(mock_device) as dut:
+            await dut.abort()
+        await dut.abort()

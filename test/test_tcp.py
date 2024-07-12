@@ -137,3 +137,12 @@ async def test_tcp_timeout_recovery():
             with pytest.raises(asyncio.TimeoutError):
                 await asyncio.wait_for(dut.get_meter_list(), 0.05)
             assert await dut.get_device_info()
+
+
+@pytest.mark.asyncio
+async def test_tcp_abort():
+    """Verify behavior of device abort."""
+    async with mock_device({}) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            await dut.abort()
+        await dut.abort()

@@ -57,6 +57,9 @@ class RAVEnWriter:
         tree = Et.ElementTree(element_cmd)
         tree.write(self._transport, encoding='ASCII', xml_declaration=False)
 
+    def abort(self) -> None:
+        self._transport.abort()
+
     def close(self) -> None:
         self._transport.close()
 
@@ -104,6 +107,16 @@ class RAVEnStreamDevice(
 
     async def open(self) -> None:
         raise NotImplementedError()
+
+    async def abort(self) -> None:
+        if self._writer:
+            self._writer.abort()
+            try:
+                await self._writer.wait_closed()
+            except IOError:
+                pass
+            self._reader = None
+            self._writer = None
 
     async def close(self) -> None:
         if self._writer:
