@@ -120,3 +120,20 @@ async def test_serial_repr():
     async with mock_pty_device({}) as mock_device:
         async with RAVEnSerialDevice(mock_device) as dut:
             assert 'RAVEnSerialDevice' in str(dut)
+
+
+@pytest.mark.asyncio
+async def test_serial_timeout_recovery():
+    """Verify device recovery after a timeout."""
+    responses = {
+        b'<Command><Name>get_device_info</Name></Command>':
+            b'<DeviceInfo>'
+            b'    <DeviceMacId>0x0123456789abcdef</DeviceMacId>'
+            b'</DeviceInfo>',
+        b'<Command><Name>get_meter_list</Name></Command>': b'',
+    }
+    async with mock_pty_device(responses) as mock_device:
+        async with RAVEnSerialDevice(mock_device) as dut:
+            with pytest.raises(asyncio.TimeoutError):
+                await asyncio.wait_for(dut.get_meter_list(), 0.05)
+            assert await dut.get_device_info()
