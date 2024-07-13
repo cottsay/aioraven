@@ -893,6 +893,25 @@ async def test_device_synchronize_persistent_leftovers():
 
 
 @pytest.mark.asyncio
+async def test_device_synchronize_timeouts():
+    """Verify behavior of the 'synchronize' helper timeouts."""
+    responses = {
+        b'<Command><Name>get_meter_list</Name></Command>':
+            [b''] * 4 + [
+                b'<MeterList>'
+                b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+                b'</MeterList>',
+            ],
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            with pytest.raises(asyncio.TimeoutError):
+                await dut.synchronize(retries=3, timeout=0.05)
+            await dut.synchronize()
+
+
+@pytest.mark.asyncio
 async def test_device_warning_generic():
     """Verify behavior of the ``get_meter_list`` command."""
     responses = {

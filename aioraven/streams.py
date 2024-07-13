@@ -128,14 +128,16 @@ class RAVEnStreamDevice(
             self._reader = None
             self._writer = None
 
-    async def synchronize(self, *, retries: int = 2) -> None:
+    async def synchronize(
+        self, *, retries: int = 2, timeout: float = 1.0,
+    ) -> None:
         await asyncio.sleep(0.05)
         for _try in range(retries, -1, -1):
             try:
                 # Try a few times to communicate with the device,
                 # allowing any data already in the buffer to flush.
-                await self.get_meter_list()
-            except RAVEnConnectionError:
+                await asyncio.wait_for(self.get_meter_list(), timeout)
+            except (RAVEnConnectionError, asyncio.TimeoutError):
                 if not _try:
                     raise
             else:
