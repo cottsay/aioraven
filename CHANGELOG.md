@@ -1,5 +1,12 @@
 ## Changelog for aioraven
 
+0.7.0 (2024-07-12)
+------------------
+* Add tests for timeout recovery
+* Fix typing on RAVEnWriter constructor
+* Expose mechanism to abort pending writes
+* Add timeouts for stream device synchronization
+
 0.6.0 (2024-06-22)
 ------------------
 * Switch to pyserial-asyncio-fast to fix event loop being blocked
