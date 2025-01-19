@@ -58,7 +58,7 @@ def convert_date(raw: Optional[str]) -> Optional[date]:
 
 
 def convert_date_code(raw: Optional[str]) -> Optional[Tuple[date, str]]:
-    if raw is not None:
+    if raw is not None and not all(ch == '\xff' for ch in raw):
         if len(raw) >= 9:
             date = convert_date(raw[:8])
             if date is not None:
