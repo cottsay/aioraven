@@ -1,5 +1,9 @@
 ## Changelog for aioraven
 
+0.7.1 (2025-01-19)
+------------------
+* Handle filler value for DateCode
+
 0.7.0 (2024-07-12)
 ------------------
 * Add tests for timeout recovery
