@@ -43,9 +43,10 @@ class RAVEnReaderProtocol(Protocol):
         self._closed = self._loop.create_future()
 
     def _reset(self) -> None:
-        self._parser = Et.XMLPullParser(events=('end',))
-        self._parser.feed(b'<?xml version="1.0" encoding="ASCII"?><root>')
         self._stash = b''
+        self._parser = Et.XMLPullParser(events=('end',))
+        self._parser.feed(
+            b'<?xml version="1.0" encoding="Windows-1252"?><root>')
 
     def _get_close_waiter(self, stream: Any) -> Future[None]:
         return self._closed

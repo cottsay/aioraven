@@ -353,6 +353,44 @@ async def test_get_device_info():
 
 
 @pytest.mark.asyncio
+async def test_get_device_info_date_code_filler():
+    """
+    Verify behavior of the ``get_device_info`` command with a filler value for
+    date_code.
+    """
+    responses = {
+        b'<Command><Name>get_device_info</Name></Command>':
+            b'<DeviceInfo>'
+            b'    <DeviceMacId>0x0123456789ABCDEF</DeviceMacId>'
+            b'    <InstallCode>0xABCDEF0123456789</InstallCode>'
+            b'    <LinkKey>0xABCDEF0123456789ABCDEF0123456789</LinkKey>'
+            b'    <FWVersion>1.21g</FWVersion>'
+            b'    <HWVersion>5.55 rev 2</HWVersion>'
+            b'    <ImageType>Mocked</ImageType>'
+            b'    <Manufacturer>aioraven</Manufacturer>'
+            b'    <ModelId>Python</ModelId>'
+            b'    <DateCode>\xff\xff\xff\xff\xff\xff\xff\xff'
+            b'\xff\xff\xff\xff\xff\xff\xff\xff</DateCode>'
+            b'</DeviceInfo>',
+    }
+
+    async with mock_device(responses) as (host, port):
+        async with RAVEnNetworkDevice(host, port) as dut:
+            actual = await dut.get_device_info()
+
+    assert actual == DeviceInfo(
+        device_mac_id=bytes.fromhex('0123456789ABCDEF'),
+        install_code=bytes.fromhex('ABCDEF0123456789'),
+        link_key=bytes.fromhex('ABCDEF0123456789ABCDEF0123456789'),
+        fw_version='1.21g',
+        hw_version='5.55 rev 2',
+        image_type='Mocked',
+        manufacturer='aioraven',
+        model_id='Python',
+        date_code=None)
+
+
+@pytest.mark.asyncio
 async def test_get_instantaneous_demand():
     """Verify behavior of the ``get_instantaneous_demand`` command."""
     responses = {
